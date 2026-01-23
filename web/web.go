@@ -421,7 +421,7 @@ func (s *Server) download(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	fileName := filepath.Base(filePath)
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", fileName))
 	w.Header().Set("Content-Type", "text/csv")
 
 	_, err = io.Copy(w, file)
