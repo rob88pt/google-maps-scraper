@@ -1,0 +1,182 @@
+# Changelog
+
+## [2026-01-24] - Reverted Review Image Scraping
+
+### Reverted
+- **Image Extraction Logic**: Reverted changes in `source/gmaps/reviews.go` and `entry.go` that attempted to extract `lh3.googleusercontent.com` URLs from background images. This feature proved fragile and complex to implement reliably alongside the RPC extraction.
+- **Legacy Fallback**: Restored the original legacy image extraction fallback in `entry.go`.
+
+### Kept
+- **RPC Path Fix**: Preserved the updated RPC path discovery (`jd[2][0][4]`) in `entry.go` as it provides better compatibility with the current Google Maps response structure.
+
+---
+
+## [2026-01-24] - Review Display & Image Investigation
+
+### Fixed
+- **Frontend Review Casting**: Fixed `Review` interface in `src/lib/docker.ts` to use lowercase fields (`name`, `rating`, `description`, etc.) to match the backend JSON serialization.
+- **Lead Detail UI**: Ensured reviews are correctly rendered in the side panel with proper field mapping.
+
+### Investigated
+- **Missing Review Images**: Analyzed raw `results.json` and confirmed image arrays contain reporting links instead of photo URLs. Identified `parseReviews` in `source/gmaps/entry.go` as the target for index updates.
+
+## [2026-01-24] - Extra Reviews Pipeline Fix
+
+### Fixed
+- **Review Struct Serialization**: Added standard `json` tags to the `Review` struct in Go (`gmaps/entry.go`) to ensure matching lowercase keys in the NDJSON extraction.
+- **Database Unique Constraint**: Applied a proper `UNIQUE (user_id, cid)` constraint to the `results` table to resolve `ON CONFLICT` mismatches during lead updates.
+- **TypeScript Type Safety**: Updated `ScrapedLead` and `Review` interfaces in `src/lib/docker.ts` to reflect the fixed casing and structure.
+- **End-to-End Reliability**: Verified that extra reviews are successfully extracted, transferred via NDJSON, and upserted into Supabase.
+
+### Files Affected
+- `source/gmaps/entry.go`: Added JSON tags.
+- `src/lib/docker.ts`: Updated TypeScript interfaces.
+- `Supabase`: Added `results_user_id_cid_key` UNIQUE constraint.
+
+---
+
+## [2026-01-24] - Preset Management & UI Accessibility
+
+### Added
+- **Overwrite Preset**: Users can now update existing presets directly from the "New Job" form with a confirmation safety check.
+- **Delete Confirmation**: Added an `AlertDialog` to prevent accidental deletion of presets.
+- **Accessibility Refinement**: Significantly improved color contrast for 'Overwrite' (Blue) and 'Delete' (Red) action buttons on dark backgrounds.
+
+### Changed
+- **API Enhancements**: Implemented `PATCH` method in the presets API to handle partial updates.
+- **UI Consolidation**: Unified preset action buttons (Save As, Overwrite, Delete) into a high-contrast action bar in `job-form.tsx`.
+
+### Files Affected
+- `src/app/api/presets/[id]/route.ts`: Implemented `PATCH` method.
+- `src/lib/hooks/use-presets.ts`: Added `useUpdatePreset` hook.
+- `src/components/jobs/job-form.tsx`: Integrated overwrite/delete dialogs and improved button accessibility.
+
+---
+
+## [2026-01-24] - Scraper Flag Hints
+
+### Added
+- **Flag Tooltips**: Implemented descriptive tooltips for all configuration options in the "New Job" form.
+- **Label Hover Trigger**: Added `Tooltip` components that trigger on label hover, with `cursor-help` styling to guide users.
+
+### Changed
+- **Job Form UI**: Integrated `TooltipProvider` and updated all field labels in `job-form.tsx` with helpful hints and optimized positioning (top/right).
+
+### Files Affected
+- `src/components/jobs/job-form.tsx` - Added tooltips and styling to labels.
+
+---
+
+## [2026-01-24] - Lead Synchronization Fix
+
+### Fixed
+- [Fixed] Running the same job twice (e.g. to get more reviews) resulted in 0 leads due to a unique constraint on `(user_id, cid)`. This was fixed in both manual and auto-sync API paths.
+- [Fixed] Extra reviews (requested via `extraReviews` parameter) were being extracted but lost before reaching the database due to a Go type assertion failure. This was fixed by using raw `[][]byte` for data transfer.
+
+## Current Issue
+- Scraper still hangs/slows down significantly when `extraReviews` is very high (e.g. 100+).
+
+## Next Steps
+1. Add timeout safeguard to review extraction in `place.go`.
+2. Add page limit to RPC review fetcher in `reviews.go`.
+3. Implement Map Coordinate Picker with search and pinpointing functionality.
+
+---
+
+## [2026-01-24] - Job Configuration View & Preset Saving
+
+### Added
+- **Job Configuration Dialog**: New component to view detailed parameters (queries, depth, concurrency, etc.) used for completed/active jobs.
+- **Save as Preset from Job**: Functionality to save the configuration of an existing job as a new preset directly from the UI.
+- **Check/Copy Keywords**: Added a "Copy All" button to the configuration view to easily extract search queries.
+
+### Changed
+- **Jobs Table Integration**: Individual job rows are now clickable to open the configuration dialog.
+- **Enhanced UI Feedback**: Added success toasts and loading states for preset saving.
+
+### Files Affected
+- `src/components/jobs/job-config-dialog.tsx` (NEW) - Main dialog component.
+- `src/app/page.tsx` - Integrated row click and configuration dialog state.
+
+---
+
+## [2026-01-24] - Preset Saving Fix
+
+### Fixed
+- **Preset API Schema Mismatch**: `extraReviews` was incorrectly typed as `z.boolean()` in `src/app/api/presets/route.ts` but should be `z.number()` (0 = disabled, >0 = max reviews). This caused Zod validation to fail when saving presets.
+- **Missing user_id in Preset Insert**: The RLS policy requires `auth.uid() = user_id` but the insert statement was missing `user_id`. Added authentication check and now includes `user_id` in the insert.
+
+### Files Affected
+- `src/app/api/presets/route.ts`
+  - Line 12: Changed `extraReviews: z.boolean()` → `extraReviews: z.number().min(0).default(0)`
+  - Lines 76-82: Added `supabase.auth.getUser()` check with 401 response
+  - Line 90: Added `.eq('user_id', user.id)` to duplicate name check
+  - Line 103: Added `user_id: user.id` to insert statement
+
+---
+
+## [2026-01-24] - Planning & Scraper Research
+
+### Added
+- Detailed implementation plan for configurable review count in `implementation_plan.md`.
+
+### Changed
+- Reverted initial `maxReviews` webapp changes to adopt a cleaner "integer `extra-reviews` flag" approach.
+
+### Decisions
+- Modify the existing `-extra-reviews` flag in the Go scraper fork from boolean to integer to control the scroll limit (1 scroll ≈ 10 reviews).
+- Document all fork changes in `docs/fork_strategy.md` for maintainability.
+
+### Problems & Solutions
+- Upstream limit of ~300 reviews → Found hardcoded `maxScrollAttempts := 30` in `reviews.go`. Solution: Make it configurable.
+
+---
+
+## [2026-01-23] - Infrastructure Fixes & JSON+Sync Architecture
+
+### Added
+- **JSON+Sync Workflow**: Implemented a post-processing architecture where the scraper writes to `results.json` and the web app parses and syncs it to Supabase. This decouples the app from the upstream scraper's DSN-specific schema requirements.
+- **Docker CP Integration**: Switched from broken WSL2 bind mounts to `docker cp` for query injection and results extraction.
+- **Network Resolution**: Switched to Supavisor (IPv4) to resolve Docker connectivity crashes caused by IPv6 routing issues on Docker Desktop.
+- **Sync API**: Created `POST /api/jobs/[id]/sync` to parse NDJSON and insert leads into Supabase with correct `job_id` and `user_id`.
+- **Security Hardening**:
+  - Switched to `spawn()` in `src/lib/docker.ts` to prevent shell injection.
+  - Applied `005_security_hardening.sql` for DB-level protection.
+  - Implemented `AlertDialog` for job deletion.
+- **Job Deduplication**: Added `cid` column and unique index `(user_id, cid)` to `results` table via migration `006`.
+
+### Fixed
+- **Docker Race Condition**: Switched from `docker run` to `docker create` → `docker cp` → `docker start` to ensure `queries.txt` is present before the scraper starts.
+- **API 500s**: Resolved RLS-related errors in `/api/leads` and fixed auth redirect exclusions in middleware.
+- **Types**: Fixed `lucide-react` icon props and Zod coercion issues in `JobForm`.
+
+---
+
+## [2026-01-23] - Auth & Real-time UI implementation (Phase 4 & 5)
+
+### Added
+- **Authentication**: Login/Signup pages, Supabase Auth integration, and protected route middleware.
+- **Real-time Monitoring**: Polling-based job status updates and "LIVE" pulsing badge for active jobs.
+- **Database Triggers**: Added trigger `004` to automatically update `result_count` on the `jobs` table when new leads are inserted.
+
+## [2026-01-23] - Leads Table & Security (Phase 2 & 3)
+
+### Added
+- **Leads Management**:
+  - `leads-table.tsx`: Complex TanStack Table with filtering, sorting, and row selection.
+  - `lead-detail-panel.tsx`: Comprehensive slide-over for lead data inspection.
+  - **Export System**: Excel-compatible CSV, JSON, and Google Contacts export.
+- **Security Foundation**:
+  - `002_enable_rls.sql`: Strict Row Level Security policies across all tables.
+  - Authenticated queries for all Data APIs.
+
+## [2026-01-23] - Foundation & Job Submission (Phase 1)
+
+### Added
+- **Foundation**: Next.js 16.1 app, shadcn/ui, TanStack Query, and Supabase integration.
+- **Core Schema**: Migration `001_initial_schema.sql` (Jobs, Results, Presets, Notes, Tags).
+- **Job Engine**: Initial `lib/docker.ts` integration with CLI flag support.
+- **Presets**: API and UI components for saving/loading job configurations.
+
+---
+... (previous content)
