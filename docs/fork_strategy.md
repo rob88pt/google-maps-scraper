@@ -1,96 +1,68 @@
-# Fork Strategy & Maintenance
+# Project Maintenance & Upstream Sync
 
 ## Overview
-This document describes how to maintain our Google Maps Scraper fork and sync with upstream updates.
+This project is configured as a **Monorepo**. It contains:
+- `leads-command-center/`: Our custom Web Application.
+- `source/`: The Google Maps Scraper (forked from upstream).
+- `docs/`: Project documentation.
 
-## Git Remote Configuration
+All components are tracked in a single Git repository at the root.
 
-| Remote       | URL                                                  | Purpose                   |
-| ------------ | ---------------------------------------------------- | ------------------------- |
-| **origin**   | `https://github.com/rob88pt/google-maps-scraper.git` | Your fork (push here)     |
-| **upstream** | `https://github.com/gosom/google-maps-scraper`       | Original repo (pull here) |
+## 1. Routine Work (Your Changes)
+When you make changes to the Web App or the Scraper:
 
-Verify with:
 ```powershell
-cd d:\Websites\GMaps_scraper_gosom\source
-git remote -v
-```
+# 1. Check what changed
+git status
 
-## Docker Images
-
-| Image                        | Purpose                                                       |
-| ---------------------------- | ------------------------------------------------------------- |
-| `google-maps-scraper:custom` | Our custom build with UTF-8 BOM fix for Portuguese characters |
-| `gosom/google-maps-scraper`  | Original upstream image (no BOM fix)                          |
-
-## Why We Have a Custom Fork
-
-The upstream `gosom/google-maps-scraper` image does not include a UTF-8 BOM (Byte Order Mark) in CSV exports. This causes Excel to incorrectly display Portuguese special characters (ã, ç, ê, etc.).
-
-**Our fix** (applied in `source/runner/webrunner/webrunner.go`) writes a UTF-8 BOM at the beginning of CSV files, ensuring Excel reads them correctly.
-
-## Git Workflow
-
-### Push Your Changes
-```powershell
-cd d:\Websites\GMaps_scraper_gosom\source
+# 2. Stage changes (add specific files or use . for all)
 git add .
-git commit -m "your commit message"
-git push origin main
+
+# 3. Commit
+git commit -m "Description of changes"
 ```
 
-### Sync with Upstream (gosom's updates)
+## 2. Pulling Scraper Updates (From Upstream)
+We have configured a remote named `upstream-scraper` that points to the original developer's repository.
+To pull their latest changes and merge them into our `source/` folder:
+
+### Step A: Fetch Updates
 ```powershell
-cd d:\Websites\GMaps_scraper_gosom\source
-
-# Fetch latest from upstream
-git fetch upstream
-
-# Merge upstream changes into your local main
-git merge upstream/main
-
-# Resolve any conflicts if needed, then push to your fork
-git push origin main
+git fetch upstream-scraper
 ```
 
-### Rebuild Custom Docker Image After Sync
+### Step B: Merge safely
+We use the `subtree` strategy because the scraper lives in a sub-folder (`source/`) in our repo, but is at the root in theirs.
+
 ```powershell
+# Merge upstream main branch into our source folder
+git merge -s subtree -X subtree=source upstream-scraper/main --allow-unrelated-histories
+```
+
+- **If there are no conflicts**: Git will auto-merge. You're done!
+- **If there are conflicts**: Git will pause. You must edit the conflicting files in `source/`, resolve the differences (keeping our custom JSON tags etc.), and then run:
+  ```powershell
+  git add .
+  git commit
+  ```
+
+## 3. Rebuilding the Docker Image
+Whenever code in `source/` changes (whether by you or an upstream update), you MUST rebuild the Docker image for the changes to take effect in the Web App.
+
+```powershell
+# 1. Navigate to scraper source
 cd d:\Websites\GMaps_scraper_gosom\source
 
-# Verify BOM fix is still in place (check webrunner.go)
-# Then rebuild
+# 2. Build the image (using our custom tag)
 docker build -t google-maps-scraper:custom .
-
-# Test the new image
-docker run google-maps-scraper:custom -h
 ```
 
-## Submit PR Upstream (Optional, Best Long-term)
-If your fix is merged upstream, you can use the official image directly:
+## 4. Customizations to Preserve
+When merging upstream updates, **ALWAYS** check that these files preserve our customizations (see `docs/fork_strategy.md` history for details):
 
-1. Create a PR on [gosom/google-maps-scraper](https://github.com/gosom/google-maps-scraper)
-2. Reference the UTF-8 BOM fix for Excel compatibility
-3. Once merged, switch to `gosom/google-maps-scraper` official image
-
-## Files Modified in Our Fork
-
-| File                                       | Change                                                                          |
-| ------------------------------------------ | ------------------------------------------------------------------------------- |
-| `source/runner/webrunner/webrunner.go`     | Added UTF-8 BOM to CSV output                                                   |
-| `source/web/web.go`                        | Fixed Content-Disposition header                                                |
-| `source/web/static/templates/job_row.html` | Added download attribute                                                        |
-| `source/gmaps/entry.go`                    | Added JSON tags, updated RPC path `jd[2][0][4]`, restored legacy image fallback |
-| `source/gmaps/reviews.go`                  | Dynamic `maxScrollAttempts`, RPC/DOM fallback structure                         |
-| `source/gmaps/place.go`                    | Added `ExtractExtraReviews` logic                                               |
-
-## Leads Command Center Compatibility
-
-The **Leads Command Center** webapp (in `leads-command-center/`) is completely separate from the scraper. It:
-- Calls the Docker container via CLI
-- Uses `-dsn` flag to point scraper at Supabase
-- Does NOT modify scraper source code
-
-This means:
-- Webapp works with any image version
-- Scraper updates don't break the webapp
-- You only need to rebuild custom image if you want new scraper features
+| File                            | Critical Customization                                                                         |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `gmaps/entry.go`                | **JSON Tags** (`json:"name"`) on Review struct. <br> **RPC Indices** (`jd[2][0][4]`) fallback. |
+| `gmaps/reviews.go`              | **Scroll Limit Logic**: Must be dynamic (`extraReviews`), NOT hardcoded.                       |
+| `gmaps/place.go`                | **Extra Reviews Logic**: Must trigger `FetchReviewsWithFallback`.                              |
+| `runner/webrunner/webrunner.go` | **UTF-8 BOM**: Essential for Excel export compatibility.                                       |
