@@ -369,20 +369,20 @@ export interface ScrapedLead {
     complete_address: Record<string, unknown>
     about: Record<string, unknown>
     user_reviews: Array<{
-        name: string
-        profile_picture: string
-        rating: number
-        description: string
-        images: string[]
-        when: string
+        Name: string
+        ProfilePicture: string
+        Rating: number
+        Description: string
+        Images: string[]
+        When: string
     }>
     user_reviews_extended: Array<{
-        name: string
-        profile_picture: string
-        rating: number
-        description: string
-        images: string[]
-        when: string
+        Name: string
+        ProfilePicture: string
+        Rating: number
+        Description: string
+        Images: string[]
+        When: string
     }>
     emails: string[]
     [key: string]: unknown // Allow additional fields

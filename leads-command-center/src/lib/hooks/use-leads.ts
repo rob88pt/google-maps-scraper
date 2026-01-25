@@ -10,6 +10,7 @@ export interface LeadsQueryOptions {
     maxRating?: number
     hasEmail?: boolean
     hasWebsite?: boolean
+    hasPhotos?: boolean
     sortBy?: 'title' | 'rating' | 'review_count' | 'created_at' | 'category' | 'city'
     sortOrder?: 'asc' | 'desc'
 }
@@ -50,6 +51,7 @@ async function fetchLeads(options: LeadsQueryOptions): Promise<LeadsResponse> {
     if (options.maxRating) params.set('maxRating', options.maxRating.toString())
     if (options.hasEmail) params.set('hasEmail', 'true')
     if (options.hasWebsite) params.set('hasWebsite', 'true')
+    if (options.hasPhotos) params.set('hasPhotos', 'true')
     if (options.sortBy) params.set('sortBy', options.sortBy)
     if (options.sortOrder) params.set('sortOrder', options.sortOrder)
 

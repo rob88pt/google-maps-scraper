@@ -19,26 +19,14 @@ import (
 )
 
 type fetchReviewsParams struct {
-	page         scrapemate.BrowserPage
-	mapURL       string
-	reviewCount  int
-	extraReviews int // max reviews to collect (0 = unlimited up to ~1000)
+	page        scrapemate.BrowserPage
+	mapURL      string
+	reviewCount int
+	extraReviews int
 }
 
 type FetchReviewsResponse struct {
 	pages [][]byte
-}
-
-func (r FetchReviewsResponse) HasPages() bool {
-	return len(r.pages) > 0
-}
-
-func (r FetchReviewsResponse) CountPages() int {
-	return len(r.pages)
-}
-
-func (r FetchReviewsResponse) GetPages() [][]byte {
-	return r.pages
 }
 
 type fetcher struct {
@@ -158,14 +146,17 @@ func (f *fetcher) fetchWithBrowser(_ context.Context, initialURL, requestID stri
 
 	// Get additional pages
 	nextPageToken := extractNextPageToken([]byte(data))
-	for nextPageToken != "" && len(ans.pages) < 50 { // Limit to 50 pages
-		// Check if we have enough reviews
-		if f.params.extraReviews > 0 {
-			totalReviews := len(ans.pages) * 20 // ~20 reviews per page
-			if totalReviews >= f.params.extraReviews {
-				break
-			}
-		}
+	
+	// Calculate max pages based on extraReviews count (10 reviews per page usually)
+	maxPages := f.params.extraReviews / 10
+	if maxPages < 1 {
+		maxPages = 1
+	}
+	if maxPages > 500 { // hard cap
+		maxPages = 500
+	}
+	
+	for nextPageToken != "" && len(ans.pages) < maxPages {
 		nextURL, err := f.generateURL(f.params.mapURL, nextPageToken, 20, requestID)
 		if err != nil {
 			break
@@ -218,9 +209,7 @@ const hexMatchPattern = `0x[0-9a-fA-F]+:0x[0-9a-fA-F]+` // Hex format place ID
 // extractPlaceID extracts the place ID from various Google Maps URL formats
 func extractPlaceID(mapURL string) (string, error) {
 	patternsOnce.Do(func() {
-		// Initialize the map before writing to it
 		patterns = make(map[string]*regexp.Regexp)
-		
 		// Try multiple patterns for extracting place ID
 		avail := []string{
 			`!1s([^!]+)`,                             // Standard format: !1s0x...
@@ -436,16 +425,13 @@ func extractReviewsFromPage(ctx context.Context, page scrapemate.BrowserPage, ex
 
 	var reviews []DOMReview
 
-	maxScrollAttempts := 30
-	if extraReviews > 0 {
-		// Estimate ~10 reviews per scroll, add buffer
-		maxScrollAttempts = (extraReviews / 10) + 5
-		if maxScrollAttempts < 5 {
-			maxScrollAttempts = 5
-		}
-		if maxScrollAttempts > 100 {
-			maxScrollAttempts = 100
-		}
+	// Calculate max scroll attempts based on extraReviews (approx 10 reviews per scroll)
+	maxScrollAttempts := extraReviews / 10
+	if maxScrollAttempts < 5 {
+		maxScrollAttempts = 5
+	}
+	if maxScrollAttempts > 1000 {
+		maxScrollAttempts = 1000
 	}
 	lastCount := 0
 	stuckCount := 0
@@ -551,10 +537,10 @@ func extractReviewsFromPage(ctx context.Context, page scrapemate.BrowserPage, ex
 							const ratingEl = element.querySelector(sel);
 							if (ratingEl) {
 								const ariaLabel = ratingEl.getAttribute('aria-label') || '';
-								// Match patterns like "5 stars", "Rated 4 out of 5", "4.5 étoiles"
-								const match = ariaLabel.match(/(\d+(?:\.\d+)?)/);
+								// Match patterns like "5 stars", "Rated 4 out of 5", "4.5 étoiles", "5.0", "5,0"
+								const match = ariaLabel.match(/(\d+(?:[\.,]\d+)?)/);
 								if (match) {
-									rating = Math.round(parseFloat(match[1])) || 0;
+									rating = Math.round(parseFloat(match[1].replace(',', '.'))) || 0;
 									break;
 								}
 								// Also try counting filled stars
@@ -607,23 +593,27 @@ func extractReviewsFromPage(ctx context.Context, page scrapemate.BrowserPage, ex
 						}
 
 						// Images
-						const imageElements = element.querySelectorAll('.KtCyie img, .Tya61d img, .review-photos img, img[src*="lh3"]');
+						const imageElements = element.querySelectorAll('.KtCyie img, .Tya61d img, .review-photos img, img[src*="lh3"], img[src*="googleusercontent"]');
 						const images = [];
 						for (const img of imageElements) {
 							const src = img.getAttribute('src') || '';
-							if (src && !src.includes('data:image') && !src.includes('profile')) {
-								images.push(src);
+							// Filter out profile pics, "report" icons, and tiny icons
+							if (src && 
+								!src.includes('data:image') && 
+								!src.includes('profile') &&
+								!src.includes('imagery/report') && 
+								!src.includes('avatar') &&
+								(src.includes('lh3.googleusercontent.com') || src.includes('lh5.googleusercontent.com'))) {
+								
+								// Get high-res version if possible
+								let highRes = src.replace(/w\d+-h\d+-[kop]-no/, 'w1920-h1080-k-no');
+								if (highRes === src) {
+									 highRes = src.replace(/=s\d+-.*/, '=s1920-k-no');
+								}
+								images.push(highRes);
 							}
 						}
-						// Also capture background-image from Tya61d buttons (where actual review photos are!)
-						const bgElements = element.querySelectorAll('.Tya61d, button[style*="background-image"]');
-						for (const btn of bgElements) {
-							const style = btn.getAttribute('style') || '';
-							const urlMatch = style.match(/url\(["']?(https:\/\/lh3\.googleusercontent\.com[^"')]+)["']?\)/);
-							if (urlMatch && urlMatch[1] && !images.includes(urlMatch[1])) {
-								images.push(urlMatch[1]);
-							}
-						}
+
 						if (userName && (text || rating > 0)) {
 							reviews.push({
 								author_name: userName,

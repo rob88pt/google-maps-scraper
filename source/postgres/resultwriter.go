@@ -14,18 +14,12 @@ import (
 	"github.com/gosom/google-maps-scraper/gmaps"
 )
 
-func NewResultWriter(db *sql.DB, jobID, userID string) scrapemate.ResultWriter {
-	return &resultWriter{
-		db:     db,
-		jobID:  jobID,
-		userID: userID,
-	}
+func NewResultWriter(db *sql.DB) scrapemate.ResultWriter {
+	return &resultWriter{db: db}
 }
 
 type resultWriter struct {
-	db     *sql.DB
-	jobID  string
-	userID string
+	db *sql.DB
 }
 
 func (r *resultWriter) Run(ctx context.Context, in <-chan scrapemate.Result) error {
@@ -69,7 +63,7 @@ func (r *resultWriter) batchSave(ctx context.Context, entries []*gmaps.Entry) er
 	}
 
 	q := `INSERT INTO results
-		(job_id, user_id, data)
+		(data)
 		VALUES
 		`
 	elements := make([]string, 0, len(entries))
@@ -81,8 +75,8 @@ func (r *resultWriter) batchSave(ctx context.Context, entries []*gmaps.Entry) er
 			return err
 		}
 
-		elements = append(elements, fmt.Sprintf("($%d, $%d, $%d)", i*3+1, i*3+2, i*3+3))
-		args = append(args, r.jobID, r.userID, data)
+		elements = append(elements, fmt.Sprintf("($%d)", i+1))
+		args = append(args, data)
 	}
 
 	q += strings.Join(elements, ", ")

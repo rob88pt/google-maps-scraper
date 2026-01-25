@@ -3,6 +3,9 @@
 For the full history and technical granularities, see the [Full Changelog](changelog.md).
 
 ## Major Milestones
+ - **2026-01-24** [Filtering Fixes & Image Investigation](changelog.md#2026-01-24---filtering-fixes--image-investigation) (City search, hasPhotos, email null handling)
+ - **2026-01-24** [Review Display & Scraper Fixes](changelog.md#2026-01-24---review-display--scraper-fixes) (Panic fix + PascalCase sync)
+- **2026-01-24** [Monorepo Transition](changelog.md#2026-01-24---monorepo-transition--git-setup) (Unified Git repo for Web App & Scraper)
 - **2026-01-24** [Reverted Review Image Scraping](changelog.md#2026-01-24---reverted-review-image-scraping) (Reverted fragile DOM extraction)
 - **2026-01-24** [Preset Management & UI Accessibility Improvements](changelog.md#2026-01-24---preset-management--ui-accessibility) (Overwrite & Delete confirmation)
 - **2026-01-24** [Scraper Flag Hints](changelog.md#2026-01-24---scraper-flag-hints) (UI tooltips for flags)
@@ -26,8 +29,11 @@ For the full history and technical granularities, see the [Full Changelog](chang
 - **Preset Management** enhanced with Overwrite and Delete confirmation
 - **Accessibility** improved with high-contrast action buttons
 - Scraper Flag Hints added to Job Form via tooltips
-- Debugging extra reviews feature (jobs hang when enabled)
-- Next: Resolve review extraction timeout/hang issue
+- **Accessibility** improved with high-contrast action buttons
+- **Scraper Panic Fixed**: Resolved nil map panic in `reviews.go`
+- **Frontend Sync Fixed**: Handled PascalCase JSON keys for reviews
+- **Filtering Logic Fixed**: Corrected JSONB paths and null handling for leads list
+- Next: Filter out "Report this photo" links in scraper; Investigate broken thumbnails on page 2.
 
 ## Recent Fixes
 - **Job Configuration**: Added dialog to view parameters and save as preset from existing jobs

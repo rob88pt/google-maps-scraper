@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
         const maxRating = parseFloat(searchParams.get('maxRating') || '5')
         const hasEmail = searchParams.get('hasEmail') === 'true'
         const hasWebsite = searchParams.get('hasWebsite') === 'true'
+        const hasPhotos = searchParams.get('hasPhotos') === 'true'
         const sortBy = searchParams.get('sortBy') || 'created_at'
         const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc'
 
@@ -56,10 +57,10 @@ export async function GET(request: NextRequest) {
         if (search) {
             // Search in title, category, and address
             query = query.or(
-                `data->title.ilike.%${search}%,` +
-                `data->category.ilike.%${search}%,` +
-                `data->address.ilike.%${search}%,` +
-                `data->>complete_address->city.ilike.%${search}%`
+                `data->>title.ilike.%${search}%,` +
+                `data->>category.ilike.%${search}%,` +
+                `data->>address.ilike.%${search}%,` +
+                `data->complete_address->>city.ilike.%${search}%`
             )
         }
 
@@ -72,13 +73,20 @@ export async function GET(request: NextRequest) {
         }
 
         // Has email filter - check if emails array is not empty
+        // data->>emails returns SQL NULL if json is null, or string representation
         if (hasEmail) {
-            query = query.not('data->emails', 'eq', '[]')
+            query = query.not('data->>emails', 'is', 'null').neq('data->>emails', '[]')
         }
 
         // Has website filter
         if (hasWebsite) {
-            query = query.neq('data->web_site', '')
+            query = query.neq('data->>web_site', '')
+        }
+
+        // Has photos filter
+        if (hasPhotos) {
+            // Check that images array is not empty and not null
+            query = query.not('data->>images', 'is', 'null').neq('data->>images', '[]')
         }
 
         // Apply sorting

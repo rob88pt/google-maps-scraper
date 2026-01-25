@@ -83,12 +83,12 @@ export interface About {
 
 
 export interface Review {
-    name: string
-    profile_picture: string
-    rating: number
-    description: string
-    images: string[] | null
-    when: string
+    Name: string
+    ProfilePicture: string
+    Rating: number
+    Description: string
+    Images: string[] | null
+    When: string
 }
 
 export interface Job {

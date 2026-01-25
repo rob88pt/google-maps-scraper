@@ -80,8 +80,6 @@ type Config struct {
 	DisablePageReuse         bool
 	ExtraReviews             int
 	LeadsDBAPIKey            string
-	JobID                    string
-	UserID                   string
 }
 
 func ParseConfig() *Config {
@@ -127,10 +125,8 @@ func ParseConfig() *Config {
 	flag.Float64Var(&cfg.Radius, "radius", 10000, "search radius in meters. Default is 10000 meters")
 	flag.StringVar(&cfg.Addr, "addr", ":8080", "address to listen on for web server")
 	flag.BoolVar(&cfg.DisablePageReuse, "disable-page-reuse", false, "disable page reuse in playwright")
-	flag.IntVar(&cfg.ExtraReviews, "extra-reviews", 0, "max number of extra reviews to collect (0 = disabled)")
+	flag.IntVar(&cfg.ExtraReviews, "extra-reviews", 0, "enable extra reviews collection (0 to disable, >0 to set limit)")
 	flag.StringVar(&cfg.LeadsDBAPIKey, "leadsdb-api-key", "", "LeadsDB API key for exporting results to LeadsDB")
-	flag.StringVar(&cfg.JobID, "job-id", "", "job ID for tracking progress")
-	flag.StringVar(&cfg.UserID, "user-id", "", "user ID for RLS ownership")
 
 	flag.Parse()
 

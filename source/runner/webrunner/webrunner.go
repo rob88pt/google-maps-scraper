@@ -151,12 +151,6 @@ func (w *webrunner) scrapeJob(ctx context.Context, job *web.Job) error {
 		return err
 	}
 
-	// Write UTF-8 BOM
-	if _, err := outfile.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
-		_ = outfile.Close()
-		return err
-	}
-
 	defer func() {
 		_ = outfile.Close()
 	}()

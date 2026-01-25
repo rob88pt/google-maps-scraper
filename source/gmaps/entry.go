@@ -49,12 +49,12 @@ type About struct {
 }
 
 type Review struct {
-	Name           string   `json:"name"`
-	ProfilePicture string   `json:"profile_picture"`
-	Rating         int      `json:"rating"`
-	Description    string   `json:"description"`
-	Images         []string `json:"images"`
-	When           string   `json:"when"`
+	Name           string
+	ProfilePicture string
+	Rating         int
+	Description    string
+	Images         []string
+	When           string
 }
 
 type Entry struct {
@@ -235,20 +235,16 @@ func (e *Entry) CsvRow() []string {
 }
 
 func (e *Entry) AddExtraReviews(pages [][]byte) {
-	fmt.Printf("[DEBUG AddExtraReviews] Called with %d pages\n", len(pages))
 	if len(pages) == 0 {
-		fmt.Println("[DEBUG AddExtraReviews] No pages, returning early")
 		return
 	}
 
-	for i, page := range pages {
+	for _, page := range pages {
 		reviews := extractReviews(page)
-		fmt.Printf("[DEBUG AddExtraReviews] Page %d: extracted %d reviews (page size: %d bytes)\n", i+1, len(reviews), len(page))
 		if len(reviews) > 0 {
 			e.UserReviewsExtended = append(e.UserReviewsExtended, reviews...)
 		}
 	}
-	fmt.Printf("[DEBUG AddExtraReviews] Final UserReviewsExtended count: %d\n", len(e.UserReviewsExtended))
 }
 
 func extractReviews(data []byte) []Review {
@@ -270,14 +266,10 @@ func extractReviews(data []byte) []Review {
 		return nil
 	}
 
-	// Try new structure first: jd[2][0][4] for listugcposts RPC response
-	reviewsI := getNthElementAndCast[[]any](jd, 2, 0, 4)
+	reviewsI := getNthElementAndCast[[]any](jd, 2)
 	if len(reviewsI) == 0 {
-		// Fallback to old structure: jd[2]
-		reviewsI = getNthElementAndCast[[]any](jd, 2)
-		if len(reviewsI) == 0 {
-			reviewsI = getNthElementAndCast[[]any](jd, 0)
-		}
+		// Try alternative indices - Google may have changed the structure
+		reviewsI = getNthElementAndCast[[]any](jd, 0)
 	}
 
 	return parseReviews(reviewsI)
@@ -457,8 +449,6 @@ func EntryFromJSON(raw []byte, reviewCountOnly ...bool) (entry Entry, err error)
 		}
 	}
 
-	entry.UserReviewsExtended = make([]Review, 0)
-
 	return entry, nil
 }
 
@@ -535,18 +525,16 @@ func parseReviews(reviewsI []any) []Review {
 			continue
 		}
 
-		// FALLBACK: Try old paths for legacy compatibility
-		if len(review.Images) == 0 {
-			optsI := getNthElementAndCast[[]any](el, 2, 2, 0, 1, 21, 7)
-			if len(optsI) == 0 {
-				optsI = getNthElementAndCast[[]any](el, 2, 2, 0, 1, 7)
-			}
+		// Try multiple paths for images
+		optsI := getNthElementAndCast[[]any](el, 2, 2, 0, 1, 21, 7)
+		if len(optsI) == 0 {
+			optsI = getNthElementAndCast[[]any](el, 2, 2, 0, 1, 7)
+		}
 
-			for j := range optsI {
-				val := getNthElementAndCast[string](optsI, j)
-				if val != "" && len(val) > 2 {
-					review.Images = append(review.Images, val[2:])
-				}
+		for j := range optsI {
+			val := getNthElementAndCast[string](optsI, j)
+			if val != "" && len(val) > 2 {
+				review.Images = append(review.Images, val[2:])
 			}
 		}
 

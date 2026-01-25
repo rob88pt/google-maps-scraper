@@ -1,5 +1,39 @@
 # Changelog
 
+## [2026-01-24] - Filtering Fixes & Image Investigation
+
+### Fixed
+- **Leads Filtering**:
+    - Fixed **City Search** by correcting the JSONB path to use text extraction (`data->complete_address->>city`).
+    - Implemented missing **Has Photos** filter in both the `use-leads` hook and the backend API route.
+    - Resolved **Has Email** filter failure by correctly handling JSON `null` values via text extraction (`data->>emails IS NOT NULL AND data->>emails != '[]'`).
+- **API Robustness**: Corrected "invalid input syntax for type json" errors by switching from `->` to `->>` for text-based filtering and searches.
+
+### Investigated
+- **Broken Images**: 
+    - Identified that "Report this photo" links (`www.google.com/local/imagery/report/...`) are being scraped as review images.
+    - Confirmed that these links lack protocols, causing 404 errors in the browser when treated as relative paths.
+    - Documented a fix plan to filter these out in the Go scraper's `entry.go` file.
+
+### Files Affected
+- `leads-command-center/src/app/api/leads/route.ts`
+- `leads-command-center/src/lib/hooks/use-leads.ts`
+- `docs/walkthrough_filtering.md` (NEW)
+
+---
+
+## [2026-01-24] - Monorepo Transition & Git Setup
+
+### Infrastructure
+- **Unified Repository**: Consolidated `docs`, `leads-command-center` (Web App), and `source` (Scraper) into a single git repository at the project root.
+- **Git Subtree Strategy**: Configured `upstream-scraper` remote and documented workflow to manage the scraper as a subtree, enabling simpler updates from the original author.
+- **Cleanup**: Removed nested `.git` repositories and established a clean `.gitignore` usage.
+
+### Documentation
+- **Updated Fork Strategy**: Rewrote `docs/fork_strategy.md` to providing a complete guide on Git Monorepo workflow, Upstream Sync commands, and docker rebuilding steps.
+
+---
+
 ## [2026-01-24] - Reverted Review Image Scraping
 
 ### Reverted
@@ -8,6 +42,27 @@
 
 ### Kept
 - **RPC Path Fix**: Preserved the updated RPC path discovery (`jd[2][0][4]`) in `entry.go` as it provides better compatibility with the current Google Maps response structure.
+
+---
+
+## [2026-01-24] - Review Display & Scraper Fixes
+
+### Fixed
+- **Scraper Panic**: Initialized `patterns` map in `gmaps/reviews.go` to solve nil map panic during place ID extraction.
+- **Data Quality**:
+    - Filtered out "Report this photo" and profile pictures from review images.
+    - Improved rating extraction logic in `reviews.go` to correctly parse "5.0" style ratings.
+- **Frontend Sync**:
+    - Added proper JSON tags to `Review` struct in Go scraper codebase.
+    - Updated `src/lib/supabase/types.ts` and `lead-detail-panel.tsx` to handle PascalCase keys (`Name`, `Rating`, etc.) from the scraper to match actual JSON output.
+    - Fixed `docker.ts` type definitions to align with real data structure.
+
+### Files Affected
+- `leads-command-center/src/lib/supabase/types.ts`
+- `leads-command-center/src/components/leads/lead-detail-panel.tsx`
+- `leads-command-center/src/lib/docker.ts`
+- `source/gmaps/reviews.go`
+- `source/gmaps/entry.go`
 
 ---
 

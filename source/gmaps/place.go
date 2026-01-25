@@ -23,7 +23,7 @@ type PlaceJob struct {
 	ExtractExtraReviews int
 }
 
-func NewPlaceJob(parentID, langCode, u string, extractEmail bool, extraReviewsCount int, opts ...PlaceJobOptions) *PlaceJob {
+func NewPlaceJob(parentID, langCode, u string, extractEmail bool, extraExtraReviews int, opts ...PlaceJobOptions) *PlaceJob {
 	const (
 		defaultPrio       = scrapemate.PriorityMedium
 		defaultMaxRetries = 3
@@ -43,7 +43,7 @@ func NewPlaceJob(parentID, langCode, u string, extractEmail bool, extraReviewsCo
 
 	job.UsageInResultststs = true
 	job.ExtractEmail = extractEmail
-	job.ExtractExtraReviews = extraReviewsCount
+	job.ExtractExtraReviews = extraExtraReviews
 
 	for _, opt := range opts {
 		opt(&job)
@@ -81,10 +81,10 @@ func (j *PlaceJob) Process(_ context.Context, resp *scrapemate.Response) (any, [
 		entry.Link = j.GetURL()
 	}
 
-	// Handle RPC-based reviews - using raw pages for robustness
-	pages, ok := resp.Meta["reviews_pages"].([][]byte)
-	if ok && len(pages) > 0 {
-		entry.AddExtraReviews(pages)
+	// Handle RPC-based reviews
+	allReviewsRaw, ok := resp.Meta["reviews_raw"].(FetchReviewsResponse)
+	if ok && len(allReviewsRaw.pages) > 0 {
+		entry.AddExtraReviews(allReviewsRaw.pages)
 	}
 
 	// Handle DOM-based reviews (fallback)
@@ -107,15 +107,6 @@ func (j *PlaceJob) Process(_ context.Context, resp *scrapemate.Response) (any, [
 		return nil, []scrapemate.IJob{emailJob}, nil
 	} else if j.ExitMonitor != nil {
 		j.ExitMonitor.IncrPlacesCompleted(1)
-	}
-
-	// DEBUG: Log entry state before returning
-	fmt.Printf("[DEBUG Process] Entry '%s' - UserReviews: %d, UserReviewsExtended: %d\n", 
-		entry.Title, len(entry.UserReviews), len(entry.UserReviewsExtended))
-	if len(entry.UserReviewsExtended) > 0 {
-		// Log first review as sample
-		fmt.Printf("[DEBUG Process] First extended review: Name=%s, Rating=%d\n", 
-			entry.UserReviewsExtended[0].Name, entry.UserReviewsExtended[0].Rating)
 	}
 
 	return &entry, nil, err
@@ -161,12 +152,11 @@ func (j *PlaceJob) BrowserActions(ctx context.Context, page scrapemate.BrowserPa
 
 	if j.ExtractExtraReviews > 0 {
 		reviewCount := j.getReviewCount(raw)
-		fmt.Printf("[ExtraReviews] ExtractExtraReviews=%d, reviewCount=%d\n", j.ExtractExtraReviews, reviewCount)
 		if reviewCount > 8 { // we have more reviews
 			params := fetchReviewsParams{
-				page:         page,
-				mapURL:       page.URL(),
-				reviewCount:  reviewCount,
+				page:        page,
+				mapURL:      page.URL(),
+				reviewCount: reviewCount,
 				extraReviews: j.ExtractExtraReviews,
 			}
 
@@ -175,18 +165,12 @@ func (j *PlaceJob) BrowserActions(ctx context.Context, page scrapemate.BrowserPa
 
 			switch {
 			case err != nil:
-				fmt.Printf("[ExtraReviews] Warning: review extraction failed: %v\n", err)
-			case rpcData.HasPages():
-				fmt.Printf("[ExtraReviews] Got %d RPC pages\n", rpcData.CountPages())
-				resp.Meta["reviews_pages"] = rpcData.GetPages()
+				fmt.Printf("Warning: review extraction failed: %v\n", err)
+			case len(rpcData.pages) > 0:
+				resp.Meta["reviews_raw"] = rpcData
 			case len(domReviews) > 0:
-				fmt.Printf("[ExtraReviews] Got %d DOM reviews\n", len(domReviews))
 				resp.Meta["dom_reviews"] = domReviews
-			default:
-				fmt.Println("[ExtraReviews] No reviews extracted")
 			}
-		} else {
-			fmt.Printf("[ExtraReviews] Skipping - reviewCount (%d) <= 8\n", reviewCount)
 		}
 	}
 

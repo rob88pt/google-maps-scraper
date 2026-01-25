@@ -1,88 +1,31 @@
 # Fork Changelog
 
-This document tracks changes made to the upstream `google-maps-scraper` repository to support the Leads Command Center application.
+This document tracks changes made to the `source/` directory, which is a subtree of [gosom/google-maps-scraper](https://github.com/gosom/google-maps-scraper).
 
-## [2026-01-24] Configurable Extra Reviews Count
+## [2026-01-24] - Fix Panic & Improve Data Quality
 
-**Objective**: Allow users to specify a maximum number of reviews to collect via the `-extra-reviews` flag, replacing the previous boolean toggle that provided no control over review count limits.
+### Fixed
+- **Panic in Reviews**: Initialized the `patterns` map in `gmaps/reviews.go` which was causing a panic (nil map assignment) during place ID extraction.
+- **Image Quality**:
+    - Filtered out "Report this photo" icons in `gmaps/reviews.go`.
+    - Added logic to request high-resolution (1080p) versions of review images.
+- **Rating Extraction**: Improved regex in `gmaps/reviews.go` to handle decimal ratings (e.g., "5.0") in aria-labels, preventing "0 stars" issues.
+- **JSON Tags**: Added snake_case JSON tags (`json:"name"`, etc.) to the `Review` struct in `gmaps/entry.go` to fix data ingestion in the frontend.
 
-### Modified Files
-
-1.  `source/runner/runner.go`
-    *   **Change**: Changed `ExtraReviews` type from `bool` to `int` in `Config` struct (line 81).
-    *   **Change**: Changed `flag.BoolVar` to `flag.IntVar` for `-extra-reviews` flag (line 130).
-    *   **Flag**: `-extra-reviews <count>` where 0 = disabled, >0 = max reviews to collect.
-
-2.  `source/gmaps/job.go`
-    *   **Change**: Changed `ExtractExtraReviews` type from `bool` to `int` in `GmapJob` struct (line 30).
-    *   **Change**: Updated `WithExtraReviews()` function to accept `count int` parameter (line 93).
-
-3.  `source/gmaps/place.go`
-    *   **Change**: Changed `ExtractExtraReviews` type from `bool` to `int` in `PlaceJob` struct (line 23).
-    *   **Change**: Updated `NewPlaceJob` signature: `extraReviewsCount int` instead of `bool` (line 26).
-    *   **Change**: Condition `j.ExtractExtraReviews` now checks `> 0` (line 153).
-    *   **Change**: Pass `extraReviews` count to `fetchReviewsParams` (line 159).
-
-4.  `source/gmaps/reviews.go`
-    *   **Change**: Added `extraReviews int` field to `fetchReviewsParams` struct (line 25).
-    *   **Change**: RPC fetcher limits pages based on `extraReviews` count (line 148-155).
-    *   **Change**: Added `extraReviews int` parameter to `extractReviewsFromPage` function (line 366).
-    *   **Change**: DOM extraction limits scroll attempts based on `extraReviews` count (lines 424-434).
-
-5.  `source/runner/jobs.go`
-    *   **Change**: Changed `extraReviews` parameter from `bool` to `int` in `CreateSeedJobs` (line 30).
-    *   **Change**: Condition `extraReviews` now checks `> 0` (line 99).
-    *   **Change**: Pass count to `gmaps.WithExtraReviews(extraReviews)` (line 100).
-
-6.  `source/runner/lambdaaws/io.go`
-    *   **Change**: Changed `ExtraReviews` from `bool` to `int` in `lInput` struct (line 13).
-
-### Rationale
-The previous boolean `-extra-reviews` flag provided no control over how many reviews to collect. The hardcoded limit of ~30 scroll attempts meant users would get roughly 300 reviews maximum, with no way to request more or fewer. This change allows precise control: `-extra-reviews 500` collects ~500 reviews, `-extra-reviews 100` collects ~100, etc.
-
-### Bug Fixes in this Release
-
-1.  `source/gmaps/reviews.go` - **Fixed nil map panic**
-    *   **Issue**: The `patterns` map was declared but never initialized with `make()`, causing a panic when `extractPlaceID` tried to write to it.
-    *   **Fix**: Added `patterns = make(map[string]*regexp.Regexp)` inside `patternsOnce.Do()` before the loop (line 209).
-
-2.  `source/gmaps/place.go` - **Fixed indentation and added debug logging**
-    *   **Issue**: Line 156 had incorrect indentation in the review extraction block.
-    *   **Fix**: Corrected indentation and added `[ExtraReviews]` debug logging to track review extraction flow.
+### Files Affected
+- `gmaps/reviews.go`
+- `gmaps/entry.go`
 
 ---
 
-## [2026-01-23] Metadata Injection for RLS & Progress Tracking
+## [2026-01-24] - Configurable Reviews Count
 
-**Objective**: Pass `job_id` and `user_id` from the Next.js app to the scraper and insert them into the `results` table. This enables Row-Level Security (ownership) and real-time progress tracking.
+### Added
+- **Integer Flag**: Changed `-extra-reviews` from boolean to integer.
+    - Usage: `-extra-reviews 100` (Scrolls until ~100 reviews are collected).
+- **Page Limits**: (Pending) Logic to stop scrolling after limit is reached.
 
-### Modified Files
+### Changed
+- Refactored `ExtraReviews` field in job structs from `bool` to `int`.
 
-1.  `source/runner/runner.go`
-    *   **Change**: Added `JobID` (string) and `UserID` (string) to `Config` struct.
-    *   **Change**: Added flag parsing for `-job-id` and `-user-id`.
-
-2.  `source/postgres/resultwriter.go`
-    *   **Change**: Added `jobID` and `userID` fields to `resultWriter` struct.
-    *   **Change**: Updated `batchSave` method to include `job_id` and `user_id` in the `INSERT` statement.
-    *   **Change**: Updated `NewResultWriter` to accept these IDs or added setters.
-
-3.  `source/runner/databaserunner/databaserunner.go`
-    *   **Change**: Pass `cfg.JobID` and `cfg.UserID` when initializing the `resultWriter`.
-
-## [Prior Changes] UTF-8 BOM for CSV & Web UI
-
-**Objective**: Ensure CSV files generated by the Web UI are correctly recognized as UTF-8 by Excel (fixes Portuguese character encoding).
-
-### Modified Files
-
-1.  `source/runner/webrunner/webrunner.go`
-    *   **Change**: Added `outfile.Write([]byte{0xEF, 0xBB, 0xBF})` to write the UTF-8 Byte Order Mark (BOM) at the start of CSV files (Line 155).
-
-### Rationale
-The upstream scraper only inserts into the `data` (JSONB) column. This makes it impossible to:
-1.  Enforce RLS policies (who owns this lead?).
-2.  Efficiently count leads per job for progress bars (requires reading all JSONB blobs).
-3.  Link results to specific jobs for history.
-
-By injecting these IDs at the scraper level, we ensure data integrity and query performance.
+---

@@ -365,22 +365,22 @@ export function LeadDetailPanel({ lead, onClose }: LeadDetailPanelProps) {
                                             <div key={`ext-${i}`} className="bg-slate-800/50 rounded-lg p-3 space-y-2">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
-                                                        {review.profile_picture && (
-                                                            <img src={review.profile_picture} alt="" className="w-6 h-6 rounded-full" />
+                                                        {review.ProfilePicture && (
+                                                            <img src={review.ProfilePicture} alt="" className="w-6 h-6 rounded-full" />
                                                         )}
-                                                        <span className="text-sm font-medium text-white">{review.name}</span>
+                                                        <span className="text-sm font-medium text-white">{review.Name}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1">
-                                                        <RatingStars rating={review.rating} />
-                                                        <span className="text-xs text-slate-500">{review.when}</span>
+                                                        <RatingStars rating={review.Rating} />
+                                                        <span className="text-xs text-slate-500">{review.When}</span>
                                                     </div>
                                                 </div>
-                                                {review.description && (
-                                                    <p className="text-sm text-slate-300 leading-relaxed">{review.description}</p>
+                                                {review.Description && (
+                                                    <p className="text-sm text-slate-300 leading-relaxed">{review.Description}</p>
                                                 )}
-                                                {review.images && review.images.length > 0 && (
+                                                {review.Images && review.Images.length > 0 && (
                                                     <div className="flex gap-1 flex-wrap">
-                                                        {review.images.slice(0, 3).map((img, idx) => (
+                                                        {review.Images.slice(0, 3).map((img, idx) => (
                                                             <img key={idx} src={img} alt="" className="w-16 h-16 object-cover rounded" />
                                                         ))}
                                                     </div>
@@ -392,18 +392,18 @@ export function LeadDetailPanel({ lead, onClose }: LeadDetailPanelProps) {
                                             <div key={`reg-${i}`} className="bg-slate-800/50 rounded-lg p-3 space-y-2">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
-                                                        {review.profile_picture && (
-                                                            <img src={review.profile_picture} alt="" className="w-6 h-6 rounded-full" />
+                                                        {review.ProfilePicture && (
+                                                            <img src={review.ProfilePicture} alt="" className="w-6 h-6 rounded-full" />
                                                         )}
-                                                        <span className="text-sm font-medium text-white">{review.name}</span>
+                                                        <span className="text-sm font-medium text-white">{review.Name}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1">
-                                                        <RatingStars rating={review.rating} />
-                                                        <span className="text-xs text-slate-500">{review.when}</span>
+                                                        <RatingStars rating={review.Rating} />
+                                                        <span className="text-xs text-slate-500">{review.When}</span>
                                                     </div>
                                                 </div>
-                                                {review.description && (
-                                                    <p className="text-sm text-slate-300 leading-relaxed">{review.description}</p>
+                                                {review.Description && (
+                                                    <p className="text-sm text-slate-300 leading-relaxed">{review.Description}</p>
                                                 )}
                                             </div>
                                         ))}

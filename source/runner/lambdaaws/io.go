@@ -10,5 +10,5 @@ type lInput struct {
 	Language         string   `json:"language"`
 	FunctionName     string   `json:"function_name"`
 	DisablePageReuse bool     `json:"disable_page_reuse"`
-	ExtraReviews     int  `json:"extra_reviews"`
+	ExtraReviews     int      `json:"extra_reviews"`
 }
