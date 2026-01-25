@@ -18,7 +18,9 @@ export interface LeadsFilters {
     minRating: number
     maxRating: number
     hasEmail: boolean
+    doesNotHaveEmail: boolean
     hasWebsite: boolean
+    doesNotHaveWebsite: boolean
     hasPhotos: boolean
 }
 
@@ -31,7 +33,9 @@ const defaultFilters: LeadsFilters = {
     minRating: 0,
     maxRating: 5,
     hasEmail: false,
+    doesNotHaveEmail: false,
     hasWebsite: false,
+    doesNotHaveWebsite: false,
     hasPhotos: false,
 }
 
@@ -42,7 +46,9 @@ export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
         filters.minRating > 0,
         filters.maxRating < 5,
         filters.hasEmail,
+        filters.doesNotHaveEmail,
         filters.hasWebsite,
+        filters.doesNotHaveWebsite,
         filters.hasPhotos,
     ].filter(Boolean).length
 
@@ -118,11 +124,16 @@ export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
                     <div className="space-y-3">
                         <Label className="text-slate-300">Data Availability</Label>
 
+
                         <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="hasEmail"
                                 checked={filters.hasEmail}
-                                onCheckedChange={(checked) => updateFilter('hasEmail', !!checked)}
+                                onCheckedChange={(checked) => onFiltersChange({
+                                    ...filters,
+                                    hasEmail: !!checked,
+                                    doesNotHaveEmail: checked ? false : filters.doesNotHaveEmail
+                                })}
                                 className="border-slate-600"
                             />
                             <label
@@ -136,9 +147,33 @@ export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
 
                         <div className="flex items-center space-x-2">
                             <Checkbox
+                                id="doesNotHaveEmail"
+                                checked={filters.doesNotHaveEmail}
+                                onCheckedChange={(checked) => onFiltersChange({
+                                    ...filters,
+                                    doesNotHaveEmail: !!checked,
+                                    hasEmail: checked ? false : filters.hasEmail
+                                })}
+                                className="border-slate-600"
+                            />
+                            <label
+                                htmlFor="doesNotHaveEmail"
+                                className="text-sm text-slate-300 flex items-center gap-2 cursor-pointer"
+                            >
+                                <X className="h-4 w-4 text-red-400" />
+                                No email
+                            </label>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
                                 id="hasWebsite"
                                 checked={filters.hasWebsite}
-                                onCheckedChange={(checked) => updateFilter('hasWebsite', !!checked)}
+                                onCheckedChange={(checked) => onFiltersChange({
+                                    ...filters,
+                                    hasWebsite: !!checked,
+                                    doesNotHaveWebsite: checked ? false : filters.doesNotHaveWebsite
+                                })}
                                 className="border-slate-600"
                             />
                             <label
@@ -147,6 +182,26 @@ export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
                             >
                                 <Globe className="h-4 w-4 text-blue-400" />
                                 Has website
+                            </label>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="doesNotHaveWebsite"
+                                checked={filters.doesNotHaveWebsite}
+                                onCheckedChange={(checked) => onFiltersChange({
+                                    ...filters,
+                                    doesNotHaveWebsite: !!checked,
+                                    hasWebsite: checked ? false : filters.hasWebsite
+                                })}
+                                className="border-slate-600"
+                            />
+                            <label
+                                htmlFor="doesNotHaveWebsite"
+                                className="text-sm text-slate-300 flex items-center gap-2 cursor-pointer"
+                            >
+                                <X className="h-4 w-4 text-red-400" />
+                                No website
                             </label>
                         </div>
 

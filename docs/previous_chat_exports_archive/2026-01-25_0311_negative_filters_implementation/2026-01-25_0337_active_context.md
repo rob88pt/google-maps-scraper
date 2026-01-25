@@ -1,7 +1,6 @@
 # Active Context
 
 ## Recent Changes
-- **[2026-01-25]** Upgraded `copy_artifacts.ps1` with smart deduplication to prevent redundant backups.
 - **[2026-01-25]** Added navigation arrows and keyboard support to High-Res Image Previews.
 - **[2026-01-25]** Implemented High-Resolution Image Previews in `LeadDetailPanel` (using `=s0` parameter).
 - **[2026-01-25]** Implemented Negative Filters ("Does not have email/website") in Leads API and UI.

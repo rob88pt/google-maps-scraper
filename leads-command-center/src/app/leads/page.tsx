@@ -38,7 +38,9 @@ export default function LeadsPage() {
         minRating: filters.minRating > 0 ? filters.minRating : undefined,
         maxRating: filters.maxRating < 5 ? filters.maxRating : undefined,
         hasEmail: filters.hasEmail || undefined,
+        doesNotHaveEmail: filters.doesNotHaveEmail || undefined,
         hasWebsite: filters.hasWebsite || undefined,
+        doesNotHaveWebsite: filters.doesNotHaveWebsite || undefined,
         sortBy: 'created_at',
         sortOrder: 'desc',
     }), [page, debouncedSearch, filters])

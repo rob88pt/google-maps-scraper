@@ -39,3 +39,6 @@ cli_test/
 *.tmp
 temp/
 .agent/
+
+*.webp
+*.png

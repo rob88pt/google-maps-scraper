@@ -17,6 +17,12 @@ import {
     Tag,
     StickyNote
 } from 'lucide-react'
+import {
+    Dialog,
+    DialogContent,
+    DialogTrigger,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -62,28 +68,103 @@ function RatingStars({ rating }: { rating: number }) {
     )
 }
 
+/**
+ * Transforms a Google Maps image URL to its highest resolution version.
+ */
+function getHighResUrl(url?: string) {
+    if (!url) return '';
+    if (url.includes('googleusercontent.com')) {
+        // Strip existing parameters and add =s0 for original resolution
+        const baseUrl = url.split('=')[0];
+        return `${baseUrl}=s0`;
+    }
+    return url;
+}
+
 // Image gallery component
 function ImageGallery({ images }: { images: Lead['images'] }) {
     const [currentIndex, setCurrentIndex] = React.useState(0)
+    const [isOpen, setIsOpen] = React.useState(false)
 
     if (!images || images.length === 0) return null
 
+    const nextImage = () => setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1))
+    const prevImage = () => setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1))
+
+    // Keyboard support for navigation
+    React.useEffect(() => {
+        if (!isOpen) return
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowRight') nextImage()
+            if (e.key === 'ArrowLeft') prevImage()
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [isOpen, images.length])
+
     return (
         <div className="relative">
-            <div className="aspect-video rounded-lg overflow-hidden bg-slate-800">
-                <img
-                    src={images[currentIndex]?.image}
-                    alt={images[currentIndex]?.title || 'Business image'}
-                    className="w-full h-full object-cover"
-                />
-            </div>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogTrigger asChild>
+                    <div className="aspect-video rounded-lg overflow-hidden bg-slate-800 cursor-zoom-in group/image">
+                        <img
+                            src={images[currentIndex]?.image}
+                            alt={images[currentIndex]?.title || 'Business image'}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover/image:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-colors" />
+                    </div>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
+                    <DialogTitle className="sr-only">Image Preview</DialogTitle>
+
+                    <div className="relative flex items-center justify-center w-full h-full group/preview">
+                        <img
+                            src={getHighResUrl(images[currentIndex]?.image)}
+                            alt={images[currentIndex]?.title || 'Business image'}
+                            className="max-w-full max-h-[90vh] object-contain rounded-md"
+                        />
+
+                        {images.length > 1 && (
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute left-6 top-1/2 -translate-y-1/2 h-16 w-10 rounded-md bg-black/50 hover:bg-black/70 text-white border-none transition-opacity opacity-0 group-hover/preview:opacity-100"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        prevImage()
+                                    }}
+                                >
+                                    <ChevronLeft className="h-10 w-10" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute right-6 top-1/2 -translate-y-1/2 h-16 w-10 rounded-md bg-black/50 hover:bg-black/70 text-white border-none transition-opacity opacity-0 group-hover/preview:opacity-100"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        nextImage()
+                                    }}
+                                >
+                                    <ChevronRight className="h-10 w-10" />
+                                </Button>
+                            </>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
             {images.length > 1 && (
                 <>
                     <Button
                         variant="ghost"
                         size="icon"
                         className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70"
-                        onClick={() => setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1))}
+                        onClick={prevImage}
                     >
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -91,7 +172,7 @@ function ImageGallery({ images }: { images: Lead['images'] }) {
                         variant="ghost"
                         size="icon"
                         className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70"
-                        onClick={() => setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1))}
+                        onClick={nextImage}
                     >
                         <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -147,13 +228,26 @@ export function LeadDetailPanel({ lead, onClose }: LeadDetailPanelProps) {
                         {lead.images && lead.images.length > 0 ? (
                             <ImageGallery images={lead.images} />
                         ) : lead.thumbnail ? (
-                            <div className="aspect-video rounded-lg overflow-hidden bg-slate-800">
-                                <img
-                                    src={lead.thumbnail}
-                                    alt={lead.title}
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <div className="aspect-video rounded-lg overflow-hidden bg-slate-800 cursor-zoom-in group/image">
+                                        <img
+                                            src={lead.thumbnail}
+                                            alt={lead.title}
+                                            className="w-full h-full object-cover transition-transform duration-300 group-hover/image:scale-105"
+                                        />
+                                        <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-colors" />
+                                    </div>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
+                                    <DialogTitle className="sr-only">Image Preview</DialogTitle>
+                                    <img
+                                        src={getHighResUrl(lead.thumbnail)}
+                                        alt={lead.title}
+                                        className="max-w-full max-h-[90vh] object-contain rounded-md"
+                                    />
+                                </DialogContent>
+                            </Dialog>
                         ) : null}
 
                         {/* Title and Category */}
@@ -381,7 +475,23 @@ export function LeadDetailPanel({ lead, onClose }: LeadDetailPanelProps) {
                                                 {review.Images && review.Images.length > 0 && (
                                                     <div className="flex gap-1 flex-wrap">
                                                         {review.Images.slice(0, 3).map((img, idx) => (
-                                                            <img key={idx} src={img} alt="" className="w-16 h-16 object-cover rounded" />
+                                                            <Dialog key={idx}>
+                                                                <DialogTrigger asChild>
+                                                                    <img
+                                                                        src={img}
+                                                                        alt=""
+                                                                        className="w-16 h-16 object-cover rounded cursor-zoom-in"
+                                                                    />
+                                                                </DialogTrigger>
+                                                                <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
+                                                                    <DialogTitle className="sr-only">Review Image Preview</DialogTitle>
+                                                                    <img
+                                                                        src={getHighResUrl(img)}
+                                                                        alt=""
+                                                                        className="max-w-full max-h-[90vh] object-contain rounded-md"
+                                                                    />
+                                                                </DialogContent>
+                                                            </Dialog>
                                                         ))}
                                                     </div>
                                                 )}

@@ -36,7 +36,9 @@ export async function GET(request: NextRequest) {
         const minRating = parseFloat(searchParams.get('minRating') || '0')
         const maxRating = parseFloat(searchParams.get('maxRating') || '5')
         const hasEmail = searchParams.get('hasEmail') === 'true'
+        const doesNotHaveEmail = searchParams.get('doesNotHaveEmail') === 'true'
         const hasWebsite = searchParams.get('hasWebsite') === 'true'
+        const doesNotHaveWebsite = searchParams.get('doesNotHaveWebsite') === 'true'
         const hasPhotos = searchParams.get('hasPhotos') === 'true'
         const sortBy = searchParams.get('sortBy') || 'created_at'
         const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc'
@@ -78,9 +80,20 @@ export async function GET(request: NextRequest) {
             query = query.not('data->>emails', 'is', 'null').neq('data->>emails', '[]')
         }
 
+        // Does not have email filter
+        if (doesNotHaveEmail) {
+            query = query.or('data->>emails.is.null,data->>emails.eq.[]')
+        }
+
         // Has website filter
         if (hasWebsite) {
             query = query.neq('data->>web_site', '')
+        }
+
+        // Does not have website filter
+        if (doesNotHaveWebsite) {
+            // Check for null or empty string
+            query = query.or('data->>web_site.is.null,data->>web_site.eq.""')
         }
 
         // Has photos filter

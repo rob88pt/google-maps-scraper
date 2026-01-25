@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-01-25] - UI Enhancements & Image Preview
+
+### Added
+- **Full Screen Image Preview**: 
+    - Implemented a high-quality image preview overlay using `@radix-ui/react-dialog`.
+    - Integrated preview triggers for both the main image carousel and fallback thumbnails in the `LeadDetailPanel`.
+    - Added subtle micro-animations (scale-up on hover) and cursor cues (`cursor-zoom-in`) to improve discoverability.
+- **Session Tracking**: Initialized and finalized the first comprehensive chat session export system for project history reconstruction.
+
+### Changed
+- **Lead Detail UI**: Improved interactivity of business images in the side panel.
+
+### Files Affected
+- `leads-command-center/src/components/leads/lead-detail-panel.tsx`
+- `docs/chat_sessions/` (NEW) - Session tracking directories.
+
+
 ## [2026-01-24] - Filtering Fixes & Image Investigation
 
 ### Fixed
