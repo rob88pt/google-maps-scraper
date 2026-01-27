@@ -1,11 +1,16 @@
 # Task List
 
 ## 🟡 In Progress
+- [/] Implement Server-Side Sorting for Leads Table (added: 2026-01-27)
+  - derives sortBy/sortOrder from table state
+  - supports Name, Category, Rating, and Query columns
 
 ## 📋 Backlog (To Do)
 - [ ] System Testing: Verify end-to-end stability for sync and decoupled scraper from DB. (added: 2026-01-23)
 
 ## ✅ Done
+- [x] Implement Server-Side Sorting for Leads Table (2026-01-27)
+- [x] Implement Category Column & Filter dropdown with counts (2026-01-27)
 - [x] Consolidate Leads toolbar: Move 'Columns' selector to main toolbar (2026-01-27)
 - [x] Refine Leads Page UI: Remove redundant heading and reposition lead count (2026-01-27)
 - [x] Fix Leads Table scrolling issue and implement sticky header (2026-01-27)

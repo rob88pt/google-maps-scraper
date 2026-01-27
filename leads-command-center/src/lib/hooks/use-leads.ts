@@ -13,7 +13,8 @@ export interface LeadsQueryOptions {
     hasWebsite?: boolean
     doesNotHaveWebsite?: boolean
     hasPhotos?: boolean
-    sortBy?: 'title' | 'rating' | 'review_count' | 'created_at' | 'category' | 'city'
+    category?: string
+    sortBy?: 'title' | 'review_rating' | 'review_count' | 'created_at' | 'category' | 'city' | 'input_id'
     sortOrder?: 'asc' | 'desc'
 }
 
@@ -56,6 +57,7 @@ async function fetchLeads(options: LeadsQueryOptions): Promise<LeadsResponse> {
     if (options.hasWebsite) params.set('hasWebsite', 'true')
     if (options.doesNotHaveWebsite) params.set('doesNotHaveWebsite', 'true')
     if (options.hasPhotos) params.set('hasPhotos', 'true')
+    if (options.category) params.set('category', options.category)
     if (options.sortBy) params.set('sortBy', options.sortBy)
     if (options.sortOrder) params.set('sortOrder', options.sortOrder)
 

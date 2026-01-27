@@ -17,6 +17,8 @@ import { LeadsTable, type LeadRow } from "@/components/leads/leads-table"
 import { LeadsFilters, defaultFilters, type LeadsFilters as FilterType } from "@/components/leads/leads-filters"
 import { LeadDetailPanel } from "@/components/leads/lead-detail-panel"
 import { useLeads, type LeadsQueryOptions } from "@/lib/hooks/use-leads"
+import { useCategories } from "@/lib/hooks/use-categories"
+import { CategoryFilter } from "@/components/leads/category-filter"
 import { useDebounce } from "@/lib/hooks/use-debounce"
 import { useMediaQuery } from "@/lib/hooks/use-media-query"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -27,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ChevronDown } from "lucide-react"
 import { getColumnLabel } from "@/components/leads/leads-table"
-import type { VisibilityState } from '@tanstack/react-table'
+import type { VisibilityState, SortingState } from '@tanstack/react-table'
 
 export default function LeadsPage() {
     // State
@@ -36,6 +38,8 @@ export default function LeadsPage() {
     const [selectedLead, setSelectedLead] = React.useState<LeadRow | null>(null)
     const [selectedIds, setSelectedIds] = React.useState<Set<number>>(new Set())
     const [page, setPage] = React.useState(1)
+    const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
+    const [sorting, setSorting] = React.useState<SortingState>([{ id: 'created_at', desc: true }])
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
 
     const hasInitializedVisibility = React.useRef(false)
@@ -56,12 +60,15 @@ export default function LeadsPage() {
         doesNotHaveEmail: filters.doesNotHaveEmail || undefined,
         hasWebsite: filters.hasWebsite || undefined,
         doesNotHaveWebsite: filters.doesNotHaveWebsite || undefined,
-        sortBy: 'created_at',
-        sortOrder: 'desc',
-    }), [page, debouncedSearch, filters])
+        category: selectedCategory || undefined,
+        sortBy: sorting[0]?.id as any || 'created_at',
+        sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
+    }), [page, debouncedSearch, filters, selectedCategory, sorting])
 
     // Fetch leads
     const { data, isLoading, error } = useLeads(queryOptions)
+    // Fetch categories
+    const { data: categoriesData, isLoading: isCategoriesLoading } = useCategories(queryOptions)
 
     // Set responsive column defaults on mount
     React.useEffect(() => {
@@ -135,13 +142,23 @@ export default function LeadsPage() {
 
                         <div className="ml-auto flex items-center gap-4">
                             <p className="text-sm text-slate-400 whitespace-nowrap">
-                                {data?.total ?? 0} leads found
+                                {data?.total ?? 0} results found
                                 {selectedIds.size > 0 && ` • ${selectedIds.size} selected`}
                             </p>
 
                             <LeadsFilters
                                 filters={filters}
                                 onFiltersChange={setFilters}
+                            />
+
+                            <CategoryFilter
+                                categories={categoriesData?.categories ?? []}
+                                selectedCategory={selectedCategory}
+                                onCategoryChange={(cat) => {
+                                    setSelectedCategory(cat)
+                                    setPage(1) // Reset to first page
+                                }}
+                                isLoading={isCategoriesLoading}
                             />
 
                             <DropdownMenu>
@@ -153,7 +170,7 @@ export default function LeadsPage() {
                                 <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700">
                                     <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
                                     <DropdownMenuSeparator className="bg-slate-700" />
-                                    {['thumbnail', 'title', 'input_id', 'complete_address', 'web_site', 'phone', 'review_rating', 'indicators'].map((id) => (
+                                    {['thumbnail', 'title', 'category', 'input_id', 'complete_address', 'web_site', 'phone', 'review_rating', 'indicators'].map((id) => (
                                         <DropdownMenuCheckboxItem
                                             key={id}
                                             className="capitalize"
@@ -225,6 +242,11 @@ export default function LeadsPage() {
                             onSelectionChange={setSelectedIds}
                             columnVisibility={columnVisibility}
                             onColumnVisibilityChange={setColumnVisibility}
+                            sorting={sorting}
+                            onSortingChange={(newSorting) => {
+                                setSorting(newSorting)
+                                setPage(1) // Reset to first page
+                            }}
                         />
                     </div>
 

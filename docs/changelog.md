@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026-01-27] - Category Column & Filter dropdown with counts
+
+### Added
+- **Category Column**: Added a dedicated column in the Leads table to display business categories.
+- **Category Filter**: Implemented a dynamic filter dropdown in the toolbar that shows result counts per category.
+- **Server-Side Sorting**: Implemented server-side sorting for all key columns (Name, Category, Rating, Query) to support large datasets across pages.
+- **Text Wrapping**: Enabled text wrapping in table columns to prevent truncation of long titles, categories, and locations.
+- **API Endpoints**: New `/api/categories` route for aggregating counts and updated `/api/leads` for category filtering.
+
+### Changed
+- **Terminology**: Updated "leads" to "results" across the UI (count display and empty state).
+- **UI Refinement**: Removed redundant category subtitles from the business name column.
+
 ## [2026-01-27] - UI Refinement & Scrolling Fix
 
 ### Fixed

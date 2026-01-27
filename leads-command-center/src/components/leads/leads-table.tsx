@@ -50,12 +50,15 @@ interface LeadsTableProps {
     onSelectionChange?: (ids: Set<number>) => void
     columnVisibility?: VisibilityState
     onColumnVisibilityChange?: (visibility: VisibilityState) => void
+    sorting?: SortingState
+    onSortingChange?: (sorting: SortingState) => void
 }
 
 // Helper for column labels
 export function getColumnLabel(id: string): string {
     switch (id) {
         case 'web_site': return 'Website'
+        case 'category': return 'Category'
         case 'input_id': return 'Query'
         case 'complete_address': return 'Location'
         case 'review_rating': return 'Rating'
@@ -179,12 +182,30 @@ export const columns: ColumnDef<LeadRow>[] = [
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="flex flex-col">
-                <div className="font-medium text-white">{row.getValue('title')}</div>
-                <div className="text-xs text-slate-500">{row.original.category}</div>
+            <div className="font-medium text-white whitespace-normal break-words">
+                {row.getValue('title')}
             </div>
         ),
         size: 250,
+    },
+    {
+        accessorKey: 'category',
+        header: ({ column }) => (
+            <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                className="text-slate-400 hover:text-white -ml-4"
+            >
+                Category
+                <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
+            </Button>
+        ),
+        cell: ({ row }) => (
+            <div className="text-sm text-slate-300 whitespace-normal break-words">
+                {row.getValue('category') || '—'}
+            </div>
+        ),
+        size: 180,
     },
     {
         id: 'input_id',
@@ -214,7 +235,7 @@ export const columns: ColumnDef<LeadRow>[] = [
             const city = addr?.city || ''
             const state = addr?.state || ''
             return (
-                <div className="text-sm text-slate-300">
+                <div className="text-sm text-slate-300 whitespace-normal break-words">
                     {city}{city && state ? ', ' : ''}{state}
                 </div>
             )
@@ -375,16 +396,28 @@ export function LeadsTable({
     onSelectionChange,
     columnVisibility: columnVisibilityProp,
     onColumnVisibilityChange: onColumnVisibilityChangeProp,
+    sorting: sortingProp,
+    onSortingChange: onSortingChangeProp,
 }: LeadsTableProps) {
-    const [sorting, setSorting] = React.useState<SortingState>([])
+    const [internalSorting, setInternalSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [internalColumnVisibility, setInternalColumnVisibility] = React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
 
+    const sorting = sortingProp ?? internalSorting
+    const setSorting = (updaterOrValue: any) => {
+        if (onSortingChangeProp) {
+            const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(sorting) : updaterOrValue
+            onSortingChangeProp(newValue)
+        } else {
+            setInternalSorting(updaterOrValue)
+        }
+    }
+
     const columnVisibility = columnVisibilityProp ?? internalColumnVisibility
     const setColumnVisibility = (updaterOrValue: any) => {
         if (onColumnVisibilityChangeProp) {
-            const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility) : updaterOrValue
+            const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility as VisibilityState) : updaterOrValue
             onColumnVisibilityChangeProp(newValue)
         } else {
             setInternalColumnVisibility(updaterOrValue)
@@ -398,7 +431,7 @@ export function LeadsTable({
     React.useEffect(() => {
         if (!hasInitializedVisibility.current && !isLoading) {
             if (!isDesktop) {
-                setColumnVisibility((prev) => ({
+                setColumnVisibility((prev: VisibilityState) => ({
                     ...prev,
                     input_id: false,
                     indicators: false,
@@ -415,8 +448,6 @@ export function LeadsTable({
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
         state: {
@@ -502,12 +533,14 @@ export function LeadsTable({
                                         <TableCell
                                             key={cell.id}
                                             style={{ width: cell.column.getSize() }}
-                                            className="overflow-hidden"
+                                            className="overflow-hidden align-top py-3"
                                         >
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
+                                            <div className="whitespace-normal break-words">
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </div>
                                         </TableCell>
                                     ))}
                                 </TableRow>
@@ -518,7 +551,7 @@ export function LeadsTable({
                                     colSpan={columns.length}
                                     className="h-24 text-center text-slate-500"
                                 >
-                                    No leads found.
+                                    No results found.
                                 </TableCell>
                             </TableRow>
                         )}

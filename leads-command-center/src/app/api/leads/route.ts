@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
         const hasWebsite = searchParams.get('hasWebsite') === 'true'
         const doesNotHaveWebsite = searchParams.get('doesNotHaveWebsite') === 'true'
         const hasPhotos = searchParams.get('hasPhotos') === 'true'
+        const category = searchParams.get('category')?.trim() || ''
         const sortBy = searchParams.get('sortBy') || 'created_at'
         const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc'
 
@@ -64,6 +65,11 @@ export async function GET(request: NextRequest) {
                 `data->>address.ilike.%${search}%,` +
                 `data->complete_address->>city.ilike.%${search}%`
             )
+        }
+
+        // Category filter
+        if (category) {
+            query = query.eq('data->>category', category)
         }
 
         // Rating filter - compare numeric values in JSONB
@@ -106,11 +112,12 @@ export async function GET(request: NextRequest) {
         // For JSONB fields, we need to use the arrow operator
         const validSortFields: Record<string, string> = {
             'title': 'data->title',
-            'rating': 'data->review_rating',
+            'review_rating': 'data->review_rating',
             'review_count': 'data->review_count',
             'created_at': 'created_at',
             'category': 'data->category',
-            'city': 'data->complete_address->city'
+            'city': 'data->complete_address->city',
+            'input_id': 'data->input_id'
         }
 
         const sortField = validSortFields[sortBy] || 'created_at'
