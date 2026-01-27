@@ -1,25 +1,20 @@
 # Active Context
 
 ## Recent Changes
-- **[2026-01-27]** Finalized a comprehensive Technical Implementation Plan for Laptop/Desktop Responsiveness.
-- **[2026-01-27]** Added "Website" column to Leads Table with truncated links and toggleable visibility.
-- **[2026-01-27]** Fixed nested pagination in `LeadsTable` and consolidated UI navigation controls.
-- **[2026-01-27]** Cleaned up `docs/fork_strategy.md` and reverted minor unintentional Go code changes.
-- **[2026-01-27]** Implemented CRM status (New/Contacted/etc) and Notes feed in `LeadDetailPanel`.
-- **[2026-01-27]** Added business thumbnail markers and auto-centering to Map view.
-- **[2026-01-27]** Integrated Nominatim API coordinate picker into `JobForm`.
-- **[2026-01-27]** Fixed leads table content truncation and implemented interactive column resizing.
-- **[2026-01-27]** Fixed map popups to be persistent on hover for easier link interaction.
-- **[2026-01-25]** Upgraded `copy_artifacts.ps1` with smart deduplication.
+- **[2026-01-27]** Fixed Leads Table scrolling issue by enabling internal vertical overflow and implementing sticky headers.
+- **[2026-01-27]** Refined Leads UI by removing redundant header and moving lead count to the filter bar.
+- **[2026-01-27]** Consolidated Leads toolbar: Lifted column visibility state and moved 'Columns' selector to the main filter bar.
+- **[2026-01-27]** Implemented Laptop/Desktop Responsiveness: Root layout refactor, responsive side-panel/overlay toggle.
+- **[2026-01-27]** Added "Website" column to Leads Table with truncated links.
+- **[2026-01-27]** Implemented CRM status and Notes feed.
 
 ## Current Focus
-- Implementation: Making the Leads Command Center responsive for laptop/desktop viewports according to the approved plan.
-- Verification: Ensuring the new "Website" column displays correctly and links work without row click interference.
+- Verification: Waiting for user feedback on the new responsive UI and consolidated toolbar.
+- System Testing: Verifying end-to-end stability for sync and decoupled scraper from DB.
 
 ## Next Steps
-1. **Implementation**: Execute the Laptop/Desktop Responsiveness plan (root layout, `useMediaQuery`, `Sheet` overlay, `table-fixed`).
-2. **Testing**: Verify end-to-end stability for sync and decoupled scraper from DB in a production-like job.
-
+1. **Testing**: Run a production-like job to verify end-to-end stability (scraper -> NDJSON -> Supabase sync).
+2. **Review Verification**: Confirm with user if the UI refinements meet their expectations.
 
 ## Session Notes
 - Pivot: User requested to prioritize stability, search/filtering correctness, and verifying existing features over adding new CRM capabilities.

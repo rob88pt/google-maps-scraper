@@ -48,6 +48,19 @@ interface LeadsTableProps {
     onRowClick?: (lead: LeadRow) => void
     selectedIds?: Set<number>
     onSelectionChange?: (ids: Set<number>) => void
+    columnVisibility?: VisibilityState
+    onColumnVisibilityChange?: (visibility: VisibilityState) => void
+}
+
+// Helper for column labels
+export function getColumnLabel(id: string): string {
+    switch (id) {
+        case 'web_site': return 'Website'
+        case 'input_id': return 'Query'
+        case 'complete_address': return 'Location'
+        case 'review_rating': return 'Rating'
+        default: return id.replace(/_/g, ' ')
+    }
 }
 
 // Visual indicator badges for lead data availability
@@ -360,11 +373,23 @@ export function LeadsTable({
     onRowClick,
     selectedIds,
     onSelectionChange,
+    columnVisibility: columnVisibilityProp,
+    onColumnVisibilityChange: onColumnVisibilityChangeProp,
 }: LeadsTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+    const [internalColumnVisibility, setInternalColumnVisibility] = React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
+
+    const columnVisibility = columnVisibilityProp ?? internalColumnVisibility
+    const setColumnVisibility = (updaterOrValue: any) => {
+        if (onColumnVisibilityChangeProp) {
+            const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility) : updaterOrValue
+            onColumnVisibilityChangeProp(newValue)
+        } else {
+            setInternalColumnVisibility(updaterOrValue)
+        }
+    }
 
     const isDesktop = useMediaQuery("(min-width: 1280px)")
     const hasInitializedVisibility = React.useRef(false)
@@ -429,47 +454,18 @@ export function LeadsTable({
     }
 
     return (
-        <div className="w-full">
-            {/* Column visibility toggle */}
-            <div className="flex items-center justify-end mb-4">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="border-slate-700 bg-transparent">
-                            Columns <ChevronDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700">
-                        {table
-                            .getAllColumns()
-                            .filter((column) => column.getCanHide())
-                            .map((column) => (
-                                <DropdownMenuCheckboxItem
-                                    key={column.id}
-                                    className="capitalize"
-                                    checked={column.getIsVisible()}
-                                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                                >
-                                    {column.id === 'web_site' ? 'Website' :
-                                        column.id === 'input_id' ? 'Query' :
-                                            column.id === 'complete_address' ? 'Location' :
-                                                column.id === 'review_rating' ? 'Rating' :
-                                                    column.id.replace(/_/g, ' ')}
-                                </DropdownMenuCheckboxItem>
-                            ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
+        <div className="flex-1 flex flex-col min-h-0 w-full">
 
-            {/* Table */}
-            <div className="rounded-lg border border-slate-800 overflow-hidden overflow-x-auto">
+            {/* Table wrapper with vertical and horizontal scroll */}
+            <div className="flex-1 rounded-lg border border-slate-800 overflow-auto min-h-0">
                 <Table style={{ minWidth: '100%', width: table.getCenterTotalSize(), tableLayout: 'fixed' }}>
-                    <TableHeader className="bg-slate-900/50">
+                    <TableHeader className="bg-slate-900 border-b border-slate-800 sticky top-0 z-20">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id} className="border-slate-800 hover:bg-transparent">
                                 {headerGroup.headers.map((header) => (
                                     <TableHead
                                         key={header.id}
-                                        className="text-slate-400 relative group/header"
+                                        className="text-slate-400 relative group/header bg-slate-900 z-10"
                                         style={{ width: header.getSize() }}
                                     >
                                         {header.isPlaceholder

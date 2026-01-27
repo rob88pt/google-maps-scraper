@@ -1,5 +1,11 @@
 # Changelog
 
+## [2026-01-27] - UI Refinement & Scrolling Fix
+
+### Fixed
+- **Leads Table Scrolling**: Resolved issue where the table was clipped by `overflow-hidden` containers. Re-enabled vertical scrolling and implemented **sticky headers** for better data readability.
+- **UI Layout**: Removed redundant "Leads" heading from the Leads tab and moved the "XX leads found" indicator into the filter bar, saving significant vertical space.
+
 ## [2026-01-27] - Responsiveness & Fluid Layout Implementation
 
 ### Added

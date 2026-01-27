@@ -20,6 +20,14 @@ import { useLeads, type LeadsQueryOptions } from "@/lib/hooks/use-leads"
 import { useDebounce } from "@/lib/hooks/use-debounce"
 import { useMediaQuery } from "@/lib/hooks/use-media-query"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import {
+    DropdownMenuCheckboxItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown } from "lucide-react"
+import { getColumnLabel } from "@/components/leads/leads-table"
+import type { VisibilityState } from '@tanstack/react-table'
 
 export default function LeadsPage() {
     // State
@@ -28,6 +36,9 @@ export default function LeadsPage() {
     const [selectedLead, setSelectedLead] = React.useState<LeadRow | null>(null)
     const [selectedIds, setSelectedIds] = React.useState<Set<number>>(new Set())
     const [page, setPage] = React.useState(1)
+    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+
+    const hasInitializedVisibility = React.useRef(false)
 
     // Breakpoint for overlay: 1280px (xl)
     const isDesktop = useMediaQuery("(min-width: 1280px)")
@@ -51,6 +62,20 @@ export default function LeadsPage() {
 
     // Fetch leads
     const { data, isLoading, error } = useLeads(queryOptions)
+
+    // Set responsive column defaults on mount
+    React.useEffect(() => {
+        if (!hasInitializedVisibility.current && !isLoading) {
+            if (!isDesktop) {
+                setColumnVisibility((prev) => ({
+                    ...prev,
+                    input_id: false,
+                    indicators: false,
+                }))
+            }
+            hasInitializedVisibility.current = true
+        }
+    }, [isDesktop, isLoading])
 
     // Export handlers
     const handleExport = async (format: 'csv' | 'json' | 'google-contacts') => {
@@ -96,17 +121,6 @@ export default function LeadsPage() {
             <main className="flex-1 flex overflow-hidden">
                 {/* Main content area */}
                 <div className={`flex-1 flex flex-col p-6 min-w-0 ${selectedLead && isDesktop ? 'pr-0' : ''}`}>
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h2 className="text-2xl font-bold text-white">Leads</h2>
-                            <p className="text-slate-400">
-                                {data?.total ?? 0} leads found
-                                {selectedIds.size > 0 && ` • ${selectedIds.size} selected`}
-                            </p>
-                        </div>
-                    </div>
-
                     {/* Search and filter bar */}
                     <div className="flex items-center gap-4 mb-6">
                         <div className="relative flex-1 max-w-md">
@@ -119,46 +133,77 @@ export default function LeadsPage() {
                             />
                         </div>
 
-                        <LeadsFilters
-                            filters={filters}
-                            onFiltersChange={setFilters}
-                        />
+                        <div className="ml-auto flex items-center gap-4">
+                            <p className="text-sm text-slate-400 whitespace-nowrap">
+                                {data?.total ?? 0} leads found
+                                {selectedIds.size > 0 && ` • ${selectedIds.size} selected`}
+                            </p>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="gap-2 border-slate-700 bg-transparent"
-                                    disabled={selectedIds.size === 0}
-                                >
-                                    <Download className="h-4 w-4" />
-                                    Export {selectedIds.size > 0 && `(${selectedIds.size})`}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700">
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onClick={() => handleExport('csv')}
-                                >
-                                    <FileSpreadsheet className="mr-2 h-4 w-4" />
-                                    Export as CSV
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onClick={() => handleExport('json')}
-                                >
-                                    <FileJson className="mr-2 h-4 w-4" />
-                                    Export as JSON
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onClick={() => handleExport('google-contacts')}
-                                >
-                                    <Users className="mr-2 h-4 w-4" />
-                                    Export to Google Contacts
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                            <LeadsFilters
+                                filters={filters}
+                                onFiltersChange={setFilters}
+                            />
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="gap-2 border-slate-700 bg-transparent">
+                                        Columns <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700">
+                                    <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                                    <DropdownMenuSeparator className="bg-slate-700" />
+                                    {['thumbnail', 'title', 'input_id', 'complete_address', 'web_site', 'phone', 'review_rating', 'indicators'].map((id) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={id}
+                                            className="capitalize"
+                                            checked={columnVisibility[id] !== false}
+                                            onCheckedChange={(value) =>
+                                                setColumnVisibility((prev) => ({ ...prev, [id]: !!value }))
+                                            }
+                                        >
+                                            {getColumnLabel(id)}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="gap-2 border-slate-700 bg-transparent"
+                                        disabled={selectedIds.size === 0}
+                                    >
+                                        <Download className="h-4 w-4" />
+                                        Export {selectedIds.size > 0 && `(${selectedIds.size})`}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700">
+                                    <DropdownMenuItem
+                                        className="cursor-pointer"
+                                        onClick={() => handleExport('csv')}
+                                    >
+                                        <FileSpreadsheet className="mr-2 h-4 w-4" />
+                                        Export as CSV
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        className="cursor-pointer"
+                                        onClick={() => handleExport('json')}
+                                    >
+                                        <FileJson className="mr-2 h-4 w-4" />
+                                        Export as JSON
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        className="cursor-pointer"
+                                        onClick={() => handleExport('google-contacts')}
+                                    >
+                                        <Users className="mr-2 h-4 w-4" />
+                                        Export to Google Contacts
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
 
                     {/* Error state */}
@@ -171,13 +216,15 @@ export default function LeadsPage() {
                     )}
 
                     {/* Leads table */}
-                    <div className="flex-1 overflow-hidden min-h-0">
+                    <div className="flex-1 overflow-auto min-h-0">
                         <LeadsTable
                             data={data?.leads ?? []}
                             isLoading={isLoading}
                             onRowClick={setSelectedLead}
                             selectedIds={selectedIds}
                             onSelectionChange={setSelectedIds}
+                            columnVisibility={columnVisibility}
+                            onColumnVisibilityChange={setColumnVisibility}
                         />
                     </div>
 

@@ -6,15 +6,10 @@
 - [ ] System Testing: Verify end-to-end stability for sync and decoupled scraper from DB. (added: 2026-01-23)
 
 ## ✅ Done
+- [x] Consolidate Leads toolbar: Move 'Columns' selector to main toolbar (2026-01-27)
+- [x] Refine Leads Page UI: Remove redundant heading and reposition lead count (2026-01-27)
+- [x] Fix Leads Table scrolling issue and implement sticky header (2026-01-27)
 - [x] Laptop/Desktop Responsiveness & Overlay Mode (2026-01-27)
-- [x] Fix Jobs Page Fluid Layout & Full-Width Refinement (2026-01-27)
-- [x] Resolve Lead Details Duplicate Close Buttons (2026-01-27)
-- [x] Pause Thumbnail Investigation (User confirmed OK: 2026-01-27)
-- [x] Add Website Column to Leads Table (2026-01-27)
-- [x] Resolve Dual Pagination & UI Count Discrepancies (2026-01-27)
-- [x] Align Scraper Documentation & Fork Strategy (2026-01-27)
-- [x] Improve column resizer visibility & interactivity (2026-01-27)
-- [x] Fix Leads Table content truncation (2026-01-27)
 - [x] Restore Map Functionality & Image Markers (2026-01-27)
 - [x] Implement CRM Feature (Status + Notes) in UI and API (2026-01-27)
 - [x] Integrate Nominatim Coordinate Picker (2026-01-27)
