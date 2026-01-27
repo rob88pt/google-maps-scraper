@@ -1,0 +1,10 @@
+# Tasks
+
+- [/] Optimize for Laptop/Narrow Desktop (added: 2026-01-27)
+  - [/] Research current layout and flex behavior on narrow desktop viewports
+  - [ ] Implement `useMediaQuery` hook (hydration-safe)
+  - [ ] Transition root to `flex-col h-screen overflow-hidden`
+  - [ ] Refactor Leads Page: Remove `h-[calc(100vh-64px)]` and ensure internal scroll
+  - [ ] Implement `Sheet` (drawer) for `LeadDetailPanel` (breakpoint: 1280px / xl)
+  - [ ] Implement responsive column visibility default (breakpoint: 1280px / xl)
+  - [ ] Final verification on standard laptop resolutions (1280px, 1366px, 1440px)

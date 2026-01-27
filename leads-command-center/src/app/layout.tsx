@@ -21,9 +21,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans antialiased bg-slate-950 text-slate-50 min-h-screen`}>
+      <body className={`${inter.variable} font-sans antialiased bg-slate-950 text-slate-50 h-screen overflow-hidden flex flex-col`}>
         <QueryProvider>
-          {children}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {children}
+          </div>
           <Toaster />
         </QueryProvider>
       </body>

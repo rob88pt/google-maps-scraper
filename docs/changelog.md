@@ -1,6 +1,36 @@
 # Changelog
 
-## [2026-01-27] - Leads Table Enhancement
+## [2026-01-27] - Responsiveness & Fluid Layout Implementation
+
+### Added
+- **Global Layout Structure**: Migrated to `flex flex-col h-screen overflow-hidden` root layout.
+    - Benefits: Prevents double scrollbars, maintains pinned header, delegates scroll to content areas.
+- **Responsive Components**:
+    - `useMediaQuery`: Hydration-safe hook for breakpoint logic.
+    - `Sheet`: Radix-based overlay drawer for lead details on viewports < 1280px.
+- **Fluid Jobs Page**: Refactored Jobs page to full-width, eliminating the centered container constraint.
+
+### Fixed
+- **Jobs Page "Squeezed" Layout**: Removed the fixed 3-column grid that reserved space for empty columns, allowing the main card to span the full viewport.
+- **Duplicate Close Buttons**: Hidden the internal "X" in `LeadDetailPanel` when rendered within a `Sheet` overlay to prevent UI redundancy.
+- **Table Column Breakpoints**: Fixed an issue where the 'Query' column wouldn't hide correctly on narrow screens by explicitly setting IDs and refining initialization logic.
+- **JSX Syntax**: Fixed unclosed tags and broken formatting in `src/app/page.tsx` introduced during layout refactoring.
+
+### Changed
+- **Leads Table**: 
+    - Forced `table-fixed` for reliable column width management.
+    - Implemented auto-hiding for `input_id` and `indicators` columns on screens < 1280px.
+- **Leads Page**: Switched from sidecar panel to overlay drawer at the 1280px breakpoint.
+
+### Files Affected
+- `leads-command-center/src/app/layout.tsx`
+- `leads-command-center/src/app/page.tsx`
+- `leads-command-center/src/app/leads/page.tsx`
+- `leads-command-center/src/components/leads/leads-table.tsx`
+- `leads-command-center/src/components/leads/lead-detail-panel.tsx`
+- `leads-command-center/src/lib/hooks/use-media-query.ts`
+- `leads-command-center/src/components/ui/sheet.tsx`
+
 
 ### Added
 - **Website Column**: Added a new "Website" column to the `LeadsTable` component.

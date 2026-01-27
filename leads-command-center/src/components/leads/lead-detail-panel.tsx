@@ -45,6 +45,7 @@ export type LeadRow = Lead & { id: number; created_at: string }
 interface LeadDetailPanelProps {
     lead: LeadRow | null
     onClose: () => void
+    showCloseButton?: boolean
 }
 
 const STATUS_OPTIONS = [
@@ -210,7 +211,7 @@ function ImageGallery({ images }: { images: Lead['images'] }) {
     )
 }
 
-export function LeadDetailPanel({ lead, onClose }: LeadDetailPanelProps) {
+export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadDetailPanelProps) {
     const { copy, copied } = useCopyToClipboard()
     const [noteContent, setNoteContent] = React.useState('')
 
@@ -268,11 +269,13 @@ export function LeadDetailPanel({ lead, onClose }: LeadDetailPanelProps) {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-800">
                 <h3 className="font-semibold text-white truncate">Lead Details</h3>
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={onClose}>
-                        <X className="h-4 w-4" />
-                    </Button>
-                </div>
+                {showCloseButton && (
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={onClose}>
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Content */}

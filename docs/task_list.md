@@ -1,13 +1,15 @@
 # Task List
 
-## 🔴 Blocked
-- [ ] Investigate Thumbnails: Check browser console for 404 details for page 2 thumbnails. (added: 2026-01-25)
-  - User commented "looks like images are ok", pausing investigation.
+## 🟡 In Progress
 
-##  Backlog (To Do)
+## 📋 Backlog (To Do)
 - [ ] System Testing: Verify end-to-end stability for sync and decoupled scraper from DB. (added: 2026-01-23)
 
 ## ✅ Done
+- [x] Laptop/Desktop Responsiveness & Overlay Mode (2026-01-27)
+- [x] Fix Jobs Page Fluid Layout & Full-Width Refinement (2026-01-27)
+- [x] Resolve Lead Details Duplicate Close Buttons (2026-01-27)
+- [x] Pause Thumbnail Investigation (User confirmed OK: 2026-01-27)
 - [x] Add Website Column to Leads Table (2026-01-27)
 - [x] Resolve Dual Pagination & UI Count Discrepancies (2026-01-27)
 - [x] Align Scraper Documentation & Fork Strategy (2026-01-27)

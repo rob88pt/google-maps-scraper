@@ -18,6 +18,8 @@ import { LeadsFilters, defaultFilters, type LeadsFilters as FilterType } from "@
 import { LeadDetailPanel } from "@/components/leads/lead-detail-panel"
 import { useLeads, type LeadsQueryOptions } from "@/lib/hooks/use-leads"
 import { useDebounce } from "@/lib/hooks/use-debounce"
+import { useMediaQuery } from "@/lib/hooks/use-media-query"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
 export default function LeadsPage() {
     // State
@@ -27,9 +29,11 @@ export default function LeadsPage() {
     const [selectedIds, setSelectedIds] = React.useState<Set<number>>(new Set())
     const [page, setPage] = React.useState(1)
 
+    // Breakpoint for overlay: 1280px (xl)
+    const isDesktop = useMediaQuery("(min-width: 1280px)")
+
     // Debounce search input
     const debouncedSearch = useDebounce(search, 300)
-
     // Build query options
     const queryOptions: LeadsQueryOptions = React.useMemo(() => ({
         page,
@@ -86,12 +90,12 @@ export default function LeadsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950">
+        <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
             <AppHeader />
 
-            <main className="flex h-[calc(100vh-64px)]">
+            <main className="flex-1 flex overflow-hidden">
                 {/* Main content area */}
-                <div className={`flex-1 flex flex-col p-6 ${selectedLead ? 'pr-0' : ''}`}>
+                <div className={`flex-1 flex flex-col p-6 min-w-0 ${selectedLead && isDesktop ? 'pr-0' : ''}`}>
                     {/* Header */}
                     <div className="flex items-center justify-between mb-6">
                         <div>
@@ -167,7 +171,7 @@ export default function LeadsPage() {
                     )}
 
                     {/* Leads table */}
-                    <div className="flex-1 overflow-auto">
+                    <div className="flex-1 overflow-hidden min-h-0">
                         <LeadsTable
                             data={data?.leads ?? []}
                             isLoading={isLoading}
@@ -207,8 +211,8 @@ export default function LeadsPage() {
                     )}
                 </div>
 
-                {/* Detail panel */}
-                {selectedLead && (
+                {/* Detail panel - SIDECAR for desktop (xl+) */}
+                {selectedLead && isDesktop && (
                     <div className="w-[400px] border-l border-slate-800 flex-shrink-0">
                         <LeadDetailPanel
                             lead={selectedLead}
@@ -216,6 +220,20 @@ export default function LeadsPage() {
                         />
                     </div>
                 )}
+
+                {/* Detail panel - OVERLAY for medium/small screens (< xl) */}
+                <Sheet open={!!selectedLead && !isDesktop} onOpenChange={(open) => !open && setSelectedLead(null)}>
+                    <SheetContent side="right" className="w-full sm:max-w-[400px] p-0 bg-slate-950 border-slate-800">
+                        <SheetTitle className="sr-only">Lead Details</SheetTitle>
+                        {selectedLead && (
+                            <LeadDetailPanel
+                                lead={selectedLead}
+                                onClose={() => setSelectedLead(null)}
+                                showCloseButton={false}
+                            />
+                        )}
+                    </SheetContent>
+                </Sheet>
             </main>
         </div>
     )

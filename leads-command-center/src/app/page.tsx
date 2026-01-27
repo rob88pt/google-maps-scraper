@@ -99,10 +99,10 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
       <AppHeader />
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="flex-1 overflow-y-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold text-white">Scraping Jobs</h2>
@@ -125,7 +125,7 @@ export default function JobsPage() {
           </Dialog>
         </div>
 
-        <div className="grid gap-6">
+        <div className="space-y-6">
           <Card className="bg-slate-900 border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>

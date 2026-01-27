@@ -1,0 +1,30 @@
+feat: implement responsive layout and full-width Jobs page refinement
+
+This commit overhaul the application's layout system to support diverse viewports
+and resolves several UI/UX issues related to responsiveness.
+
+Key Changes:
+- Global Layout: Refactored `layout.tsx` to a `flex flex-col h-screen overflow-hidden`
+  structure. This manages scrolling internally, preventing horizontal overflow
+  and keeping the navigation header pinned.
+- Responsive Details: Integrated `useMediaQuery` for breakpoint-aware rendering.
+  Lead details now transition from a sidecar panel (desktop >1280px) to a
+  `Sheet` overlay drawer on smaller screens.
+- Jobs Page Optimization: Refactored the "Scraping Jobs" page to be fluid
+  and full-width. Removed the restrictive responsive grid that reserved empty
+  space on wide monitors, ensuring the content occupies the full available width.
+- UI Polish: Resolved a duplicate close button bug where two "X" icons would
+  appear in the Lead Detail overlay. Added a `showCloseButton` prop to
+  `LeadDetailPanel` for conditional header rendering.
+- Leads Table: Enforced `table-fixed` for column stability and implemented
+  automatic hiding of 'Query' and 'Indicators' columns on narrower viewports
+  to maximize usable space.
+
+Affected Files:
+- src/app/layout.tsx
+- src/app/page.tsx
+- src/app/leads/page.tsx
+- src/components/leads/leads-table.tsx
+- src/components/leads/lead-detail-panel.tsx
+- src/lib/hooks/use-media-query.ts
+- src/components/ui/sheet.tsx

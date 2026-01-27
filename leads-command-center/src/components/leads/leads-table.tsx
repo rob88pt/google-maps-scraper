@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useMediaQuery } from '@/lib/hooks/use-media-query'
 import type { Lead } from '@/lib/supabase/types'
 
 // Extended Lead type with row metadata
@@ -173,6 +174,7 @@ export const columns: ColumnDef<LeadRow>[] = [
         size: 250,
     },
     {
+        id: 'input_id',
         accessorKey: 'input_id',
         header: ({ column }) => (
             <Button
@@ -363,6 +365,23 @@ export function LeadsTable({
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
+
+    const isDesktop = useMediaQuery("(min-width: 1280px)")
+    const hasInitializedVisibility = React.useRef(false)
+
+    // Set responsive column defaults on mount
+    React.useEffect(() => {
+        if (!hasInitializedVisibility.current && !isLoading) {
+            if (!isDesktop) {
+                setColumnVisibility((prev) => ({
+                    ...prev,
+                    input_id: false,
+                    indicators: false,
+                }))
+            }
+            hasInitializedVisibility.current = true
+        }
+    }, [isDesktop, isLoading])
 
     const table = useReactTable({
         data,
