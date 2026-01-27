@@ -1,5 +1,17 @@
 # Changelog
 
+## [2026-01-27] - Leads Table Enhancement
+
+### Added
+- **Website Column**: Added a new "Website" column to the `LeadsTable` component.
+    - Positioning: Placed between 'Location' and 'Phone'.
+    - Features: Displayed as a Globe icon + truncated link, opens in a new tab with `rel="noreferrer"`.
+    - UX: Integrated `e.stopPropagation()` to prevent row click when clicking the link.
+    - Toggle: Integrated with the "Columns" visibility menu (visible by default).
+
+### Files Affected
+- `leads-command-center/src/components/leads/leads-table.tsx`
+
 ## [2026-01-27] - Scraper Documentation Alignment
 
 ### Fixed

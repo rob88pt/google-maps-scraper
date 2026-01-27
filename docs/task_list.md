@@ -8,6 +8,7 @@
 - [ ] System Testing: Verify end-to-end stability for sync and decoupled scraper from DB. (added: 2026-01-23)
 
 ## ✅ Done
+- [x] Add Website Column to Leads Table (2026-01-27)
 - [x] Resolve Dual Pagination & UI Count Discrepancies (2026-01-27)
 - [x] Align Scraper Documentation & Fork Strategy (2026-01-27)
 - [x] Improve column resizer visibility & interactivity (2026-01-27)

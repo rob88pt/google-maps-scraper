@@ -207,6 +207,31 @@ export const columns: ColumnDef<LeadRow>[] = [
         size: 200,
     },
     {
+        accessorKey: 'web_site',
+        header: 'Website',
+        cell: ({ row }) => {
+            const website = row.getValue('web_site') as string
+            if (!website) return <span className="text-slate-600">—</span>
+
+            // Clean display URL (remove protocol)
+            const displayUrl = website.replace(/^https?:\/\//, '').replace(/\/$/, '')
+
+            return (
+                <a
+                    href={website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <Globe className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{displayUrl}</span>
+                </a>
+            )
+        },
+        size: 200,
+    },
+    {
         accessorKey: 'phone',
         header: 'Phone',
         cell: ({ row }) => {
@@ -405,7 +430,11 @@ export function LeadsTable({
                                     checked={column.getIsVisible()}
                                     onCheckedChange={(value) => column.toggleVisibility(!!value)}
                                 >
-                                    {column.id}
+                                    {column.id === 'web_site' ? 'Website' :
+                                        column.id === 'input_id' ? 'Query' :
+                                            column.id === 'complete_address' ? 'Location' :
+                                                column.id === 'review_rating' ? 'Rating' :
+                                                    column.id.replace(/_/g, ' ')}
                                 </DropdownMenuCheckboxItem>
                             ))}
                     </DropdownMenuContent>

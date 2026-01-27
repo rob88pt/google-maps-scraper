@@ -1,6 +1,7 @@
 # Active Context
 
 ## Recent Changes
+- **[2026-01-27]** Added "Website" column to Leads Table with truncated links and toggleable visibility.
 - **[2026-01-27]** Fixed nested pagination in `LeadsTable` and consolidated UI navigation controls.
 - **[2026-01-27]** Cleaned up `docs/fork_strategy.md` and reverted minor unintentional Go code changes.
 - **[2026-01-27]** Implemented CRM status (New/Contacted/etc) and Notes feed in `LeadDetailPanel`.
@@ -11,7 +12,8 @@
 - **[2026-01-25]** Upgraded `copy_artifacts.ps1` with smart deduplication.
 
 ## Current Focus
-- Verification: Ensuring the consolidated pagination flow is working as expected across multiple pages.
+- Verification: Ensuring the new "Website" column displays correctly and links work without row click interference.
+- Verification: Ensuring the consolidated pagination flow is working as expected.
 
 ## Next Steps
 1. **Testing**: Run a production-like job to verify that all active customizations (traceability, review limits) function correctly.
