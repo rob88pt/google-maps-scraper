@@ -1,5 +1,28 @@
 # Changelog
 
+## [2026-01-27] - Map Restoration & CRM Planning
+
+### Planned
+- **Map Restoration**: 
+    - Switch to CartoDB Dark Matter tiles to fix the blank map issue.
+    - Implement image-based markers to show business thumbnails directly on the map.
+    - Consistency check for Map side panel to reuse the Leads Detail Panel.
+- **CRM Integration**:
+    - Add Status dropdown (New, Qualified, etc.) to Lead details.
+    - Add Notes section for lead management.
+    - Map coordinates fix (fixing latitude/longtitude display).
+- **Data Traceability**:
+    - Fix scraper logic to map `input_id` to actual search keywords via `#!#` separator.
+- **Location Search**:
+    - Integrate Nominatim (OSM) for coordinate picking in the New Job form.
+
+### Files Affected
+- `leads-command-center/src/components/ui/map-base.tsx`
+- `leads-command-center/src/components/leads/lead-detail-panel.tsx`
+- `leads-command-center/src/lib/docker.ts`
+- `leads-command-center/src/components/jobs/job-form.tsx`
+
+
 ## [2026-01-25] - UI Enhancements & Image Preview
 
 ### Added

@@ -6,28 +6,39 @@
 
 
 ## 🟡 In Progress
-- [/] Implement Full Screen Image Preview. (added: 2026-01-25)
-  - Implemented Dialog wrapper for Lead Details images.
-  - Verified with browser test.
+- [/] Re-implement Reverted Features & Enhancements (added: 2026-01-25)
+  - [ ] Restore Map Tiles (CartoDB Dark Matter)
+  - [ ] Redo Map Side Panel (Reuse Leads Detail Panel)
+  - [ ] Show Images on Map Markers (without hover)
+  - [ ] Fix Leads Table "Query" Column (Show search term instead of ID)
+  - [ ] Recreate CRM API Endpoints (Notes POST, Status PATCH)
+  - [ ] Recreate Map Coordinate Picker (Nominatim)
 
 ## 📋 Backlog (To Do)
 - [ ] Fix Scraper: Filter out "Report this photo" links in `source/gmaps/entry.go`. (added: 2026-01-25)
-- [ ] System Testing: Verify end-to-end stability for sync and export workflows. (added: 2026-01-25)
-- [ ] Add timeout safeguard to review extraction in `place.go`. (added: 2026-01-25, from Changelog)
-- [ ] Add page limit to RPC review fetcher in `reviews.go`. (added: 2026-01-25, from Changelog)
-- [ ] Implement Map Coordinate Picker with search and pinpointing functionality. (added: 2026-01-25, from Changelog)
+- [ ] System Testing: Verify end-to-end stability for sync and# Active Context
 
-## ✅ Done
-- [x] Implement Negative Filters: "No Email" and "No Website" options. (done: 2026-01-25)
-- [x] Fix Leads Filtering: City Search, "Has Photos", and "Has Email" logic. (done: 2026-01-24)
-- [x] Investigate Broken Images: Identified "Report this photo" links as the cause. (done: 2026-01-24)
-- [x] Fix Review Display: Corrected field casing (PascalCase vs snake_case). (done: 2026-01-24)
-- [x] Infrastructure: Consolidate repositories into Unified Monorepo. (done: 2026-01-24)
-- [x] Scraper: Revert fragile DOM image extraction & restore legacy fallback. (done: 2026-01-24)
-- [x] Scraper: Fix nil map panic in review extraction. (done: 2026-01-24)
-- [x] Feature: Add Overwrite/Delete protection for Job Presets. (done: 2026-01-24)
-- [x] Feature: Job Configuration Dialog & "Save as Preset". (done: 2026-01-24)
-- [x] Feature: JSON+Sync workflow to decouple scraper from DB. (done: 2026-01-23)
+## Recent Changes
+- **[2026-01-27]** Researched and planned Map Restoration & CRM Enhancements (Image markers, Side Panel, Notes, Status).
+- **[2026-01-25]** Upgraded `copy_artifacts.ps1` with smart deduplication to prevent redundant backups.
+- **[2026-01-25]** Added navigation arrows and keyboard support to High-Res Image Previews.
+- **[2026-01-25]** Implemented High-Resolution Image Previews in `LeadDetailPanel` (using `=s0` parameter).
+- **[2026-01-25]** Implemented Negative Filters ("Does not have email/website") in Leads API and UI.
+
+## Current Focus
+- Session Handoff: Preparing for implementation of Map Restoration & CRM.
+
+## Next Steps
+1. **Restore Map Functionality**: Switch to CartoDB tiles and add image markers.
+2. **Implement CRM API**: Create endpoints for notes and status updates.
+3. **Integrate CRM in UI**: Add notes and status management to `LeadDetailPanel`.
+4. **Fix Data Traceability**: Implement query mapping via `#!#` separator.
+
+## Session Notes
+- Implementation plan approved for next session.
+- Discovered typo "longtitude" in Supabase schema/types, fix planned in UI display.
+- Database tables `lead_status` and `lead_notes` verified for CRM feature integration.
+couple scraper from DB. (done: 2026-01-23)
 - [x] Fix: Docker race conditions & network resolution (Supavisor). (done: 2026-01-23)
 - [x] Feature: Auth, Real-time status, and Leads Table UI. (done: 2026-01-23)
 - [x] Project Initialization: Next.js 16.1, Supabase, Docker integration. (done: 2026-01-23)

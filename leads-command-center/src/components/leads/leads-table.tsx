@@ -51,7 +51,7 @@ interface LeadsTableProps {
 }
 
 // Visual indicator badges for lead data availability
-function DataIndicators({ lead }: { lead: Lead }) {
+export function DataIndicators({ lead }: { lead: Lead }) {
     return (
         <div className="flex items-center gap-1">
             {lead.web_site && (
@@ -169,6 +169,24 @@ export const columns: ColumnDef<LeadRow>[] = [
             <div className="max-w-[200px]">
                 <div className="font-medium text-white truncate">{row.getValue('title')}</div>
                 <div className="text-xs text-slate-500 truncate">{row.original.category}</div>
+            </div>
+        ),
+    },
+    {
+        accessorKey: 'input_id',
+        header: ({ column }) => (
+            <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                className="text-slate-400 hover:text-white -ml-4"
+            >
+                Query
+                <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
+            </Button>
+        ),
+        cell: ({ row }) => (
+            <div className="text-sm text-slate-400 truncate max-w-[150px]">
+                {row.getValue('input_id')}
             </div>
         ),
     },

@@ -53,8 +53,10 @@ export async function spawnScraperContainer(params: ScraperJobParams): Promise<S
         console.log(`[Docker] Job directory: ${jobDir}`)
 
         // Write queries to a local file (will be copied into container)
+        // Format: "query #!# id" - we map id to query so we see the search term in results
         const queriesPath = join(jobDir, 'queries.txt')
-        await writeFile(queriesPath, params.queries.join('\n'), 'utf-8')
+        const formattedQueries = params.queries.map(q => `${q} #!# ${q}`)
+        await writeFile(queriesPath, formattedQueries.join('\n'), 'utf-8')
 
         // Verify file was created
         const queriesStat = await stat(queriesPath)

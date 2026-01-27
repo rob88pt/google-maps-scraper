@@ -396,6 +396,14 @@ export function LeadDetailPanel({ lead, onClose }: LeadDetailPanelProps) {
                             </Button>
                         </div>
 
+                        {/* Coordinates */}
+                        <div className="flex flex-col gap-1 pl-6">
+                            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Coordinates</div>
+                            <div className="text-xs text-slate-400 font-mono">
+                                {lead.latitude.toFixed(6)}, {lead.longtitude.toFixed(6)}
+                            </div>
+                        </div>
+
                         {lead.link && (
                             <Button
                                 variant="outline"
