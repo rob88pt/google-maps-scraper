@@ -60,9 +60,38 @@ docker build -t google-maps-scraper:custom .
 ## 4. Customizations to Preserve
 When merging upstream updates, **ALWAYS** check that these files preserve our customizations (see `docs/fork_strategy.md` history for details):
 
-| File                            | Critical Customization                                                                         |
-| ------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `gmaps/entry.go`                | **JSON Tags** (`json:"name"`) on Review struct. <br> **RPC Indices** (`jd[2][0][4]`) fallback. |
-| `gmaps/reviews.go`              | **Scroll Limit Logic**: Must be dynamic (`extraReviews`), NOT hardcoded.                       |
-| `gmaps/place.go`                | **Extra Reviews Logic**: Must trigger `FetchReviewsWithFallback`.                              |
-| `runner/webrunner/webrunner.go` | **UTF-8 BOM**: Essential for Excel export compatibility.                                       |
+| File               | Critical Customization                                                                                                                               |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gmaps/reviews.go` | **Scroll Limit Logic**: Dynamic (`extraReviews`) integer count instead of boolean. <br> **Safety**: Pattern map initialization to prevent nil panic. |
+| `gmaps/place.go`   | **Review Pipeline**: Integrated `FetchReviewsWithFallback`.                                                                                          |
+| `runner/jobs.go`   | **Query Mapping**: Added `#!#` delimiter parsing to allow custom `input_id` mapping.                                                                 |
+
+## 5. Fork Modification Log (Technical Details)
+
+This log tracks every change made to the `source/` (scraper) code since the initial fork. Use this to re-apply changes after an `upstream-scraper` sync.
+
+### [2026-01-27] - Data Traceability & Mapping Fix
+- **File**: `source/runner/jobs.go`
+- **Change**: Added logic to split the search query by `#!#`.
+- **Reason**: Allows the Web App to pass a custom UUID as the `input_id` while keeping the search query separate. Essential for mapping "Fast Mode" results back to their jobs.
+- **Code Reference**:
+  ```go
+  if before, after, ok := strings.Cut(query, "#!#"); ok {
+      query = strings.TrimSpace(before)
+      id = strings.TrimSpace(after)
+  }
+  ```
+
+### [2026-01-24] - Configurable Review Extraction
+- **Files**: `source/gmaps/reviews.go`, `source/gmaps/place.go`, `source/runner/jobs.go`
+- **Change**: Changed `-extra-reviews` flag from `bool` to `int`. Improved DOM/RPC scroll logic.
+- **Reason**: Allows users to specify *how many* extra reviews to get (e.g. 50 vs 500) rather than just "on/off", preventing long hangs on large businesses.
+- **Code Reference**: `maxPages := f.params.extraReviews / 10` (approx 10 reviews per page).
+
+### [2026-01-24] - Nil Pointer Panic Fix
+- **File**: `source/gmaps/reviews.go`
+- **Change**: Initialized `patterns` map inside `extractPlaceID` via `sync.Once`.
+- **Reason**: Scraper was panicking on startup when attempting to write to a nil map.
+
+---
+

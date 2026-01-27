@@ -1,5 +1,32 @@
 # Changelog
 
+## [2026-01-27] - Scraper Documentation Alignment
+
+### Fixed
+- **Scraper Source**: Reverted unintentional JSON tag additions in `source/gmaps/entry.go` to maintain original casing.
+- **Documentation**: Aligned `docs/fork_strategy.md` with the actually implemented state of the Go scraper.
+
+### Changed
+- **Fork Strategy**: Removed outdated/ghost requirements (Image Filtering, UTF-8 BOM, standard RPC index fixes) that were not present in the current stable fork.
+
+### Files Affected
+- `source/gmaps/entry.go`
+- `docs/fork_strategy.md`
+
+## [2026-01-27] - UI Consolidation & Pagination Fix
+
+### Fixed
+- **Nested Pagination**: Resolved conflicting pagination controls in `LeadsTable`. Removed client-side row limits and "Previous/Next" buttons, consolidating navigation into the server-side page controls.
+- **Selection Count**: Consolidated the selection counter to the page header to prevent "X of 25 row(s)" mismatch in the table footer.
+
+### Removed
+- Redundant TanStack Table pagination logic in `leads-table.tsx`.
+
+### Files Affected
+- `leads-command-center/src/components/leads/leads-table.tsx`
+- `leads-command-center/src/app/leads/page.tsx`
+
+
 ## [2026-01-27] - Map Restoration & CRM Enhancements
 
 ### Added
