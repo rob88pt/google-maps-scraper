@@ -166,11 +166,12 @@ export const columns: ColumnDef<LeadRow>[] = [
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="max-w-[200px]">
-                <div className="font-medium text-white truncate">{row.getValue('title')}</div>
-                <div className="text-xs text-slate-500 truncate">{row.original.category}</div>
+            <div className="flex flex-col">
+                <div className="font-medium text-white">{row.getValue('title')}</div>
+                <div className="text-xs text-slate-500">{row.original.category}</div>
             </div>
         ),
+        size: 250,
     },
     {
         accessorKey: 'input_id',
@@ -185,10 +186,11 @@ export const columns: ColumnDef<LeadRow>[] = [
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-sm text-slate-400 truncate max-w-[150px]">
+            <div className="text-sm text-slate-400">
                 {row.getValue('input_id')}
             </div>
         ),
+        size: 150,
     },
     {
         accessorKey: 'complete_address',
@@ -198,11 +200,12 @@ export const columns: ColumnDef<LeadRow>[] = [
             const city = addr?.city || ''
             const state = addr?.state || ''
             return (
-                <div className="text-sm text-slate-300 truncate max-w-[150px]">
+                <div className="text-sm text-slate-300">
                     {city}{city && state ? ', ' : ''}{state}
                 </div>
             )
         },
+        size: 200,
     },
     {
         accessorKey: 'phone',
@@ -222,6 +225,7 @@ export const columns: ColumnDef<LeadRow>[] = [
                 <span className="text-slate-600">—</span>
             )
         },
+        size: 150,
     },
     {
         accessorKey: 'review_rating',
@@ -241,12 +245,14 @@ export const columns: ColumnDef<LeadRow>[] = [
                 count={row.original.review_count}
             />
         ),
+        size: 120,
     },
     {
         id: 'indicators',
         header: 'Data',
         cell: ({ row }) => <DataIndicators lead={row.original} />,
         enableSorting: false,
+        size: 150,
     },
     {
         id: 'actions',
@@ -337,6 +343,7 @@ export function LeadsTable({
     const table = useReactTable({
         data,
         columns,
+        columnResizeMode: 'onChange',
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
@@ -408,19 +415,33 @@ export function LeadsTable({
             </div>
 
             {/* Table */}
-            <div className="rounded-lg border border-slate-800 overflow-hidden">
-                <Table>
+            <div className="rounded-lg border border-slate-800 overflow-hidden overflow-x-auto">
+                <Table style={{ minWidth: '100%', width: table.getCenterTotalSize(), tableLayout: 'fixed' }}>
                     <TableHeader className="bg-slate-900/50">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id} className="border-slate-800 hover:bg-transparent">
                                 {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id} className="text-slate-400">
+                                    <TableHead
+                                        key={header.id}
+                                        className="text-slate-400 relative group/header"
+                                        style={{ width: header.getSize() }}
+                                    >
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
                                                 header.column.columnDef.header,
                                                 header.getContext()
                                             )}
+
+                                        {/* Resize Handle */}
+                                        <div
+                                            onMouseDown={header.getResizeHandler()}
+                                            onTouchStart={header.getResizeHandler()}
+                                            className={`absolute right-0 top-0 h-full w-5 cursor-col-resize select-none touch-none flex justify-center group/resizer translate-x-1/2 z-10`}
+                                        >
+                                            <div className={`w-[2px] h-full transition-colors group-hover/resizer:bg-blue-500/50 ${header.column.getIsResizing() ? 'bg-blue-500' : 'bg-slate-700'
+                                                }`} />
+                                        </div>
                                     </TableHead>
                                 ))}
                             </TableRow>
@@ -436,7 +457,11 @@ export function LeadsTable({
                                     onClick={() => onRowClick?.(row.original)}
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
+                                        <TableCell
+                                            key={cell.id}
+                                            style={{ width: cell.column.getSize() }}
+                                            className="overflow-hidden"
+                                        >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
                                                 cell.getContext()

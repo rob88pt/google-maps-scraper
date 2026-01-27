@@ -35,16 +35,20 @@ type SearchJob struct {
 	ExitMonitor exiter.Exiter
 }
 
-func NewSearchJob(params *MapSearchParams, opts ...SearchJobOptions) *SearchJob {
+func NewSearchJob(id string, params *MapSearchParams, opts ...SearchJobOptions) *SearchJob {
 	const (
 		defaultPrio       = scrapemate.PriorityMedium
 		defaultMaxRetries = 3
 		baseURL           = "https://maps.google.com/search"
 	)
 
+	if id == "" {
+		id = uuid.New().String()
+	}
+
 	job := SearchJob{
 		Job: scrapemate.Job{
-			ID:         uuid.New().String(),
+			ID:         id,
 			Method:     http.MethodGet,
 			URL:        baseURL,
 			URLParams:  buildGoogleMapsParams(params),
@@ -80,7 +84,7 @@ func (j *SearchJob) Process(_ context.Context, resp *scrapemate.Response) (any, 
 		return nil, nil, fmt.Errorf("empty response body")
 	}
 
-	entries, err := ParseSearchResults(body)
+	entries, err := ParseSearchResults(j.ID, body)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse search results: %w", err)
 	}

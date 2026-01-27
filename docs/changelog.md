@@ -1,26 +1,34 @@
 # Changelog
 
-## [2026-01-27] - Map Restoration & CRM Planning
+## [2026-01-27] - Map Restoration & CRM Enhancements
 
-### Planned
-- **Map Restoration**: 
-    - Switch to CartoDB Dark Matter tiles to fix the blank map issue.
-    - Implement image-based markers to show business thumbnails directly on the map.
-    - Consistency check for Map side panel to reuse the Leads Detail Panel.
-- **CRM Integration**:
-    - Add Status dropdown (New, Qualified, etc.) to Lead details.
-    - Add Notes section for lead management.
-    - Map coordinates fix (fixing latitude/longtitude display).
-- **Data Traceability**:
-    - Fix scraper logic to map `input_id` to actual search keywords via `#!#` separator.
-- **Location Search**:
-    - Integrate Nominatim (OSM) for coordinate picking in the New Job form.
+### Added
+- **CRM Integration**: 
+    - Lead status tracking (New, Contacted, Qualified, Closed).
+    - Persistent notes feed for internal team communication.
+    - `useLeadStatus` and `useLeadNotes` hooks for state management.
+- **Map Enhancements**:
+    - Circular business thumbnail markers in `MapBase`.
+    - Interactive map popups that remain open on hover for link clicks.
+    - Map auto-centering on the most recent lead results.
+- **Coordinate Picker**:
+    - Integrated Nominatim (OSM) search dialog into the New Job form.
+    - One-click coordinate population from search results.
+- **Table Improvements**:
+    - Interactive column resizing with visible drag handles.
+    - Removed content truncation and max-width constraints for better viewport usage.
+
+### Fixed
+- **CRM Backend**: Resolved status/notes save failures by removing unnecessary auth constraints and fixing column mapping.
+- **Data Traceability**: Fixed "Fast Mode" query-to-result mapping in the Go scraper (via `input_id`).
 
 ### Files Affected
 - `leads-command-center/src/components/ui/map-base.tsx`
 - `leads-command-center/src/components/leads/lead-detail-panel.tsx`
-- `leads-command-center/src/lib/docker.ts`
+- `leads-command-center/src/components/leads/leads-table.tsx`
 - `leads-command-center/src/components/jobs/job-form.tsx`
+- `leads-command-center/src/app/api/leads/[cid]/status/route.ts`
+- `leads-command-center/src/app/api/leads/[cid]/notes/route.ts`
 
 
 ## [2026-01-25] - UI Enhancements & Image Preview

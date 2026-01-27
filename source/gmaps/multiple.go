@@ -8,7 +8,7 @@ import (
 	olc "github.com/google/open-location-code/go"
 )
 
-func ParseSearchResults(raw []byte) ([]*Entry, error) {
+func ParseSearchResults(queryID string, raw []byte) ([]*Entry, error) {
 	var data []any
 	if err := json.Unmarshal(raw, &data); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
@@ -40,7 +40,7 @@ func ParseSearchResults(raw []byte) ([]*Entry, error) {
 
 		var entry Entry
 
-		entry.ID = getNthElementAndCast[string](business, 0)
+		entry.ID = queryID
 		entry.Title = getNthElementAndCast[string](business, 11)
 		entry.Categories = toStringSlice(getNthElementAndCast[[]any](business, 13))
 		entry.WebSite = getNthElementAndCast[string](business, 7, 0)

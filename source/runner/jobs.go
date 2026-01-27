@@ -121,7 +121,7 @@ func CreateSeedJobs(
 				opts = append(opts, gmaps.WithSearchJobExitMonitor(exitMonitor))
 			}
 
-			job = gmaps.NewSearchJob(&jparams, opts...)
+			job = gmaps.NewSearchJob(id, &jparams, opts...)
 		}
 
 		jobs = append(jobs, job)

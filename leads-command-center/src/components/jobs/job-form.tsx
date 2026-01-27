@@ -28,6 +28,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Rocket, Save, Trash2, Settings2, MapPin, Mail, Zap, Loader2, RefreshCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import type { JobPreset } from '@/lib/supabase/types'
+import { LocationSearchDialog } from './location-search-dialog'
 
 interface JobFormProps {
     onSubmit: (values: JobFormValues) => Promise<void>
@@ -39,6 +40,7 @@ export function JobForm({ onSubmit, isSubmitting = false }: JobFormProps) {
     const [saveDialogOpen, setSaveDialogOpen] = useState(false)
     const [overwriteDialogOpen, setOverwriteDialogOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+    const [locationDialogOpen, setLocationDialogOpen] = useState(false)
     const [presetName, setPresetName] = useState('')
 
     // Preset hooks
@@ -497,14 +499,35 @@ export function JobForm({ onSubmit, isSubmitting = false }: JobFormProps) {
                                     Hard-code the search center (lat,lng). Example: 38.7223,-9.1393. Overrides query-based location.
                                 </TooltipContent>
                             </Tooltip>
-                            <Input
-                                id="geo"
-                                placeholder="38.7223,-9.1393"
-                                className="bg-slate-800 border-slate-700"
-                                {...form.register('geo')}
-                            />
+                            <div className="flex gap-2">
+                                <Input
+                                    id="geo"
+                                    placeholder="38.7223,-9.1393"
+                                    className="bg-slate-800 border-slate-700 font-mono"
+                                    {...form.register('geo')}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="border-slate-700 flex-shrink-0"
+                                    onClick={() => setLocationDialogOpen(true)}
+                                    title="Search location for coordinates"
+                                >
+                                    <MapPin className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
                     </div>
+
+                    <LocationSearchDialog
+                        open={locationDialogOpen}
+                        onOpenChange={setLocationDialogOpen}
+                        onSelect={(lat, lng) => {
+                            form.setValue('geo', `${lat.toFixed(6)},${lng.toFixed(6)}`)
+                        }}
+                    />
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Tooltip>
@@ -633,6 +656,6 @@ export function JobForm({ onSubmit, isSubmitting = false }: JobFormProps) {
                 <Rocket className="h-5 w-5" />
                 {isSubmitting ? 'Starting Job...' : 'Start Scraping Job'}
             </Button>
-        </form>
+        </form >
     )
 }

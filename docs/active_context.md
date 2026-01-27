@@ -1,18 +1,15 @@
 # Active Context
 
 ## Recent Changes
-- **[2026-01-25]** Upgraded `copy_artifacts.ps1` with smart deduplication to prevent redundant backups.
-- **[2026-01-25]** Added navigation arrows and keyboard support to High-Res Image Previews.
-- **[2026-01-25]** Implemented High-Resolution Image Previews in `LeadDetailPanel` (using `=s0` parameter).
-- **[2026-01-25]** Implemented Negative Filters ("Does not have email/website") in Leads API and UI.
-- **[2026-01-24]** Fixed **City Search**, **Has Photos**, and **Has Email** filtering logic in Leads API.
-- **[2026-01-24]** Investigated broken images; identified "Report this photo" links in reviews as a cause.
-- **[2026-01-24]** Fixed **Review Display** field casing (PascalCase vs snake_case).
-- **[2026-01-24]** Transitioned to Unified Monorepo (Git Repositories consolidated).
-- **[2026-01-24]** Reverted attempts to extract review images via DOM (proved unreliable).
+- **[2026-01-27]** Implemented CRM status (New/Contacted/etc) and Notes feed in `LeadDetailPanel`.
+- **[2026-01-27]** Added business thumbnail markers and auto-centering to Map view.
+- **[2026-01-27]** Integrated Nominatim API coordinate picker into `JobForm`.
+- **[2026-01-27]** Fixed leads table content truncation and implemented interactive column resizing.
+- **[2026-01-27]** Fixed map popups to be persistent on hover for easier link interaction.
+- **[2026-01-25]** Upgraded `copy_artifacts.ps1` with smart deduplication.
 
 ## Current Focus
-- Implementing UI enhancements (Full Screen Image Preview).
+- Session Handoff: Completed Map Restoration & CRM Enhancements.
 
 ## Next Steps
 1. **Wait for User Feedback**: Confirm if image preview meets expectations.

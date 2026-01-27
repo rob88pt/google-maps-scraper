@@ -95,21 +95,38 @@ export function MapBase({ leads, onLeadClick, center = [-9.1393, 38.7223], zoom 
 
             // Create marker element
             const el = document.createElement('div')
-            el.className = 'group relative flex flex-col items-center cursor-pointer'
+            el.className = 'group relative flex flex-col items-center cursor-pointer transition-transform hover:scale-110 active:scale-95'
 
-            // Marker content: Name and Type
-            const content = document.createElement('div')
-            content.className = 'bg-slate-900 border border-slate-700 rounded px-2 py-1 shadow-lg text-xs font-medium text-white whitespace-nowrap group-hover:bg-blue-600 group-hover:border-blue-500 transition-colors'
-            content.innerHTML = `
-                <div class="font-bold">${lead.title}</div>
-                <div class="text-[10px] text-slate-400 group-hover:text-blue-100">${lead.category}</div>
-            `
+            // Marker content: Thumbnail or Circle
+            if (lead.thumbnail) {
+                const imgContainer = document.createElement('div')
+                imgContainer.className = 'w-10 h-10 rounded-full border-2 border-white overflow-hidden shadow-xl bg-slate-800 flex-shrink-0 group-hover:border-blue-500 transition-colors'
 
-            const pin = document.createElement('div')
-            pin.className = 'w-2 h-2 bg-blue-500 rounded-full border border-white mt-1 shadow-sm'
+                const img = document.createElement('img')
+                img.src = lead.thumbnail
+                img.className = 'w-full h-full object-cover'
+                img.loading = 'lazy'
 
-            el.appendChild(content)
-            el.appendChild(pin)
+                imgContainer.appendChild(img)
+                el.appendChild(imgContainer)
+
+                // Add a small label that shows on hover
+                const label = document.createElement('div')
+                label.className = 'absolute bottom-full mb-2 bg-slate-900 border border-slate-700 rounded px-2 py-1 shadow-lg text-[10px] font-medium text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none'
+                label.textContent = lead.title
+                el.appendChild(label)
+            } else {
+                const content = document.createElement('div')
+                content.className = 'bg-slate-900 border border-slate-700 rounded px-2 py-1 shadow-lg text-xs font-medium text-white whitespace-nowrap group-hover:bg-blue-600 group-hover:border-blue-500 transition-colors'
+                content.innerHTML = `
+                    <div class="font-bold">${lead.title}</div>
+                    <div class="text-[10px] text-slate-400 group-hover:text-blue-100">${lead.category}</div>
+                `
+                const pin = document.createElement('div')
+                pin.className = 'w-2 h-2 bg-blue-500 rounded-full border border-white mt-1 shadow-sm'
+                el.appendChild(content)
+                el.appendChild(pin)
+            }
 
             // Popup content
             const popupNode = document.createElement('div')
@@ -145,9 +162,11 @@ export function MapBase({ leads, onLeadClick, center = [-9.1393, 38.7223], zoom 
                 </div>
             )
 
+            // Create popup with interaction enabled
             const popup = new maplibregl.Popup({
-                offset: 25,
+                offset: lead.thumbnail ? [0, -10] : 25,
                 closeButton: false,
+                closeOnClick: false,
                 className: 'custom-map-popup'
             }).setDOMContent(popupNode)
 
@@ -156,9 +175,29 @@ export function MapBase({ leads, onLeadClick, center = [-9.1393, 38.7223], zoom 
                 .setPopup(popup)
                 .addTo(map.current!)
 
-            // Show popup on hover
-            el.addEventListener('mouseenter', () => marker.togglePopup())
-            el.addEventListener('mouseleave', () => marker.togglePopup())
+            // Improved hover logic: keep popup open if mouse is over popup itself
+            let hoverTimeout: NodeJS.Timeout | null = null;
+
+            const showPopup = () => {
+                if (hoverTimeout) {
+                    clearTimeout(hoverTimeout);
+                    hoverTimeout = null;
+                }
+                marker.getPopup().addTo(map.current!);
+            };
+
+            const hidePopup = () => {
+                hoverTimeout = setTimeout(() => {
+                    marker.getPopup().remove();
+                }, 100);
+            };
+
+            el.addEventListener('mouseenter', showPopup);
+            el.addEventListener('mouseleave', hidePopup);
+
+            // Add listener to popup content to prevent hiding when hovering over it
+            popupNode.addEventListener('mouseenter', showPopup);
+            popupNode.addEventListener('mouseleave', hidePopup);
 
             // Handle click
             el.addEventListener('click', () => {
@@ -175,6 +214,9 @@ export function MapBase({ leads, onLeadClick, center = [-9.1393, 38.7223], zoom 
 
             {/* Custom Global Styles for the Popup */}
             <style jsx global>{`
+                .maplibregl-popup {
+                    pointer-events: auto !important;
+                }
                 .maplibregl-popup-content {
                     background: transparent !important;
                     box-shadow: none !important;

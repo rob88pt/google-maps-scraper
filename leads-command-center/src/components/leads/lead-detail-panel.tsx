@@ -15,7 +15,8 @@ import {
     ChevronLeft,
     ChevronRight,
     Tag,
-    StickyNote
+    StickyNote,
+    Loader2
 } from 'lucide-react'
 import {
     Dialog,
@@ -27,7 +28,17 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Textarea } from '@/components/ui/textarea'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from '@/components/ui/select'
+import { toast } from 'sonner'
 import type { Lead } from '@/lib/supabase/types'
+import { useLeadNotes, useLeadStatus } from '@/lib/hooks/use-leads'
 
 export type LeadRow = Lead & { id: number; created_at: string }
 
@@ -35,6 +46,13 @@ interface LeadDetailPanelProps {
     lead: LeadRow | null
     onClose: () => void
 }
+
+const STATUS_OPTIONS = [
+    { value: 'new', label: 'New', color: 'bg-blue-500' },
+    { value: 'contacted', label: 'Contacted', color: 'bg-yellow-500' },
+    { value: 'qualified', label: 'Qualified', color: 'bg-green-500' },
+    { value: 'closed', label: 'Closed', color: 'bg-slate-500' },
+]
 
 // Copy to clipboard helper
 function useCopyToClipboard() {
@@ -194,10 +212,46 @@ function ImageGallery({ images }: { images: Lead['images'] }) {
 
 export function LeadDetailPanel({ lead, onClose }: LeadDetailPanelProps) {
     const { copy, copied } = useCopyToClipboard()
+    const [noteContent, setNoteContent] = React.useState('')
+
+    // CRM hooks
+    const {
+        data: statusData,
+        isLoading: statusLoading,
+        updateStatus
+    } = useLeadStatus(lead?.cid || '')
+
+    const {
+        data: notes = [],
+        isLoading: notesLoading,
+        addNote
+    } = useLeadNotes(lead?.cid || '')
 
     if (!lead) return null
 
     const hasOpenHours = lead.open_hours && Object.keys(lead.open_hours).length > 0
+
+    const currentStatus = statusData?.status || 'new'
+
+    const handleUpdateStatus = async (newStatus: string) => {
+        try {
+            await updateStatus.mutateAsync(newStatus)
+            toast.success(`Status updated to ${newStatus}`)
+        } catch (err) {
+            toast.error('Failed to update status')
+        }
+    }
+
+    const handleAddNote = async () => {
+        if (!noteContent.trim()) return
+        try {
+            await addNote.mutateAsync(noteContent.trim())
+            setNoteContent('')
+            toast.success('Note added')
+        } catch (err) {
+            toast.error('Failed to add note')
+        }
+    }
 
     const exportAsJson = () => {
         const blob = new Blob([JSON.stringify(lead, null, 2)], { type: 'application/json' })
@@ -214,14 +268,92 @@ export function LeadDetailPanel({ lead, onClose }: LeadDetailPanelProps) {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-800">
                 <h3 className="font-semibold text-white truncate">Lead Details</h3>
-                <Button variant="ghost" size="icon" onClick={onClose}>
-                    <X className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={onClose}>
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
             </div>
 
             {/* Content */}
             <ScrollArea className="flex-1">
                 <div className="p-4 space-y-6">
+                    {/* CRM Section: Status & Notes */}
+                    <div className="space-y-4 bg-slate-800/30 p-4 rounded-xl border border-slate-800">
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Lead Status</label>
+                            <Select
+                                value={currentStatus}
+                                onValueChange={handleUpdateStatus}
+                                disabled={updateStatus.isPending}
+                            >
+                                <SelectTrigger className="w-full bg-slate-900 border-slate-700">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-900 border-slate-700">
+                                    {STATUS_OPTIONS.map((opt) => (
+                                        <SelectItem key={opt.value} value={opt.value}>
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-2 h-2 rounded-full ${opt.color}`} />
+                                                {opt.label}
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <Separator className="bg-slate-800" />
+
+                        <div className="space-y-3">
+                            <label className="text-xs font-medium text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <StickyNote className="h-3 w-3" />
+                                Notes
+                            </label>
+
+                            <div className="space-y-2">
+                                <Textarea
+                                    placeholder="Add a note about this lead..."
+                                    className="bg-slate-900 border-slate-700 min-h-[80px] text-sm"
+                                    value={noteContent}
+                                    onChange={(e) => setNoteContent(e.target.value)}
+                                />
+                                <div className="flex justify-end">
+                                    <Button
+                                        size="sm"
+                                        className="h-8 bg-blue-600 hover:bg-blue-700"
+                                        disabled={!noteContent.trim() || addNote.isPending}
+                                        onClick={handleAddNote}
+                                    >
+                                        {addNote.isPending && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
+                                        Save Note
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {notesLoading ? (
+                                <div className="flex justify-center py-4">
+                                    <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                                </div>
+                            ) : notes.length > 0 ? (
+                                <div className="space-y-3 pt-2">
+                                    {notes.map((note) => (
+                                        <div key={note.id} className="text-sm bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
+                                            <p className="text-slate-300 leading-relaxed">{note.content}</p>
+                                            <div className="mt-2 text-[10px] text-slate-500">
+                                                {new Date(note.created_at).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-slate-500 text-center py-2">No notes yet.</p>
+                            )}
+                        </div>
+                    </div>
+
+                    <Separator className="bg-slate-800" />
+
                     {/* Hero Section */}
                     <div className="space-y-4">
                         {/* Thumbnail or Gallery */}
@@ -265,7 +397,7 @@ export function LeadDetailPanel({ lead, onClose }: LeadDetailPanelProps) {
                             <span className="text-slate-500">({lead.review_count} reviews)</span>
                         </div>
 
-                        {/* Status */}
+                        {/* Status (Business Status like "Open") */}
                         {lead.status && (
                             <Badge
                                 variant={lead.status.toLowerCase().includes('open') ? 'default' : 'secondary'}
@@ -396,9 +528,9 @@ export function LeadDetailPanel({ lead, onClose }: LeadDetailPanelProps) {
                             </Button>
                         </div>
 
-                        {/* Coordinates */}
+                        {/* Coordinates with fixed label */}
                         <div className="flex flex-col gap-1 pl-6">
-                            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Coordinates</div>
+                            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Coordinates (Lat, Long)</div>
                             <div className="text-xs text-slate-400 font-mono">
                                 {lead.latitude.toFixed(6)}, {lead.longtitude.toFixed(6)}
                             </div>

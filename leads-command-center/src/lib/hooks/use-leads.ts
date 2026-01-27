@@ -109,6 +109,78 @@ export function useLead(cid: string | null) {
 // Note mutation hooks will be added when we implement the notes API
 
 /**
+ * Hook to manage lead notes
+ */
+export function useLeadNotes(cid: string) {
+    const queryClient = useQueryClient()
+
+    const query = useQuery({
+        queryKey: [...leadsKeys.detail(cid), 'notes'],
+        queryFn: async () => {
+            const response = await fetch(`/api/leads/${encodeURIComponent(cid)}/notes`)
+            if (!response.ok) throw new Error('Failed to fetch notes')
+            const { notes } = await response.json()
+            return notes as LeadNote[]
+        },
+        enabled: !!cid,
+    })
+
+    const addNote = useMutation({
+        mutationFn: async (content: string) => {
+            const response = await fetch(`/api/leads/${encodeURIComponent(cid)}/notes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content }),
+            })
+            if (!response.ok) throw new Error('Failed to add note')
+            return response.json()
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [...leadsKeys.detail(cid), 'notes'] })
+        },
+    })
+
+    return { ...query, addNote }
+}
+
+/**
+ * Hook to manage lead status
+ */
+export function useLeadStatus(cid: string) {
+    const queryClient = useQueryClient()
+
+    const query = useQuery({
+        queryKey: [...leadsKeys.detail(cid), 'status'],
+        queryFn: async () => {
+            const response = await fetch(`/api/leads/${encodeURIComponent(cid)}/status`)
+            if (!response.ok) throw new Error('Failed to fetch status')
+            const { status } = await response.json()
+            return status as LeadStatus | null
+        },
+        enabled: !!cid,
+    })
+
+    const updateStatus = useMutation({
+        mutationFn: async (status: string) => {
+            const response = await fetch(`/api/leads/${encodeURIComponent(cid)}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status }),
+            })
+            if (!response.ok) throw new Error('Failed to update status')
+            return response.json()
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [...leadsKeys.detail(cid), 'status'] })
+            // Also invalidate the list to show status changes if needed
+            queryClient.invalidateQueries({ queryKey: leadsKeys.lists() })
+        },
+    })
+
+    return { ...query, updateStatus }
+}
+
+/**
  * Hook to invalidate leads queries (useful after mutations)
  */
 export function useInvalidateLeads() {
