@@ -13,7 +13,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { LeadsTable, type LeadRow } from "@/components/leads/leads-table"
+import { LeadsTable, type LeadRow, defaultColumnOrder } from "@/components/leads/leads-table"
 import { LeadsFilters, defaultFilters, type LeadsFilters as FilterType } from "@/components/leads/leads-filters"
 import { LeadDetailPanel } from "@/components/leads/lead-detail-panel"
 import { useLeads, type LeadsQueryOptions } from "@/lib/hooks/use-leads"
@@ -27,7 +27,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, ArrowUp, ArrowDown } from "lucide-react"
 import { getColumnLabel } from "@/components/leads/leads-table"
 import type { VisibilityState, SortingState } from '@tanstack/react-table'
 
@@ -41,6 +41,7 @@ export default function LeadsPage() {
     const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
     const [sorting, setSorting] = React.useState<SortingState>([{ id: 'created_at', desc: true }])
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+    const [columnOrder, setColumnOrder] = React.useState<string[]>(defaultColumnOrder)
 
     const hasInitializedVisibility = React.useRef(false)
 
@@ -117,8 +118,25 @@ export default function LeadsPage() {
             URL.revokeObjectURL(url)
         } catch (err) {
             console.error('Export error:', err)
-            alert('Failed to export leads')
         }
+    }
+
+    const moveColumn = (id: string, direction: 'up' | 'down') => {
+        const newOrder = [...columnOrder]
+        const index = newOrder.indexOf(id)
+        if (index === -1) return
+
+        const newIndex = direction === 'up' ? index - 1 : index + 1
+        if (newIndex < 0 || newIndex >= newOrder.length) return
+
+        // Don't swap with fixed columns (select, actions)
+        const targetId = newOrder[newIndex]
+        const isTargetReorderable = !['select', 'actions'].includes(targetId)
+        if (!isTargetReorderable) return
+
+        newOrder.splice(index, 1)
+        newOrder.splice(newIndex, 0, id)
+        setColumnOrder(newOrder)
     }
 
     return (
@@ -170,18 +188,47 @@ export default function LeadsPage() {
                                 <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700">
                                     <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
                                     <DropdownMenuSeparator className="bg-slate-700" />
-                                    {['thumbnail', 'title', 'category', 'input_id', 'complete_address', 'web_site', 'phone', 'review_rating', 'indicators'].map((id) => (
-                                        <DropdownMenuCheckboxItem
-                                            key={id}
-                                            className="capitalize"
-                                            checked={columnVisibility[id] !== false}
-                                            onCheckedChange={(value) =>
-                                                setColumnVisibility((prev) => ({ ...prev, [id]: !!value }))
-                                            }
-                                        >
-                                            {getColumnLabel(id)}
-                                        </DropdownMenuCheckboxItem>
-                                    ))}
+                                    <div className="max-h-[300px] overflow-y-auto">
+                                        {columnOrder.filter(id => !['select', 'actions'].includes(id)).map((id) => (
+                                            <div key={id} className="flex items-center gap-1 pr-2 hover:bg-slate-800/50">
+                                                <DropdownMenuCheckboxItem
+                                                    className="capitalize flex-1"
+                                                    checked={columnVisibility[id] !== false}
+                                                    onCheckedChange={(value) =>
+                                                        setColumnVisibility((prev) => ({ ...prev, [id]: !!value }))
+                                                    }
+                                                >
+                                                    {getColumnLabel(id)}
+                                                </DropdownMenuCheckboxItem>
+                                                <div className="flex flex-col">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-4 w-4 hover:bg-slate-700 text-slate-500"
+                                                        onClick={(e) => {
+                                                            e.preventDefault()
+                                                            e.stopPropagation()
+                                                            moveColumn(id, 'up')
+                                                        }}
+                                                    >
+                                                        <ArrowUp className="h-3 w-3" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-4 w-4 hover:bg-slate-700 text-slate-500"
+                                                        onClick={(e) => {
+                                                            e.preventDefault()
+                                                            e.stopPropagation()
+                                                            moveColumn(id, 'down')
+                                                        }}
+                                                    >
+                                                        <ArrowDown className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
@@ -242,6 +289,8 @@ export default function LeadsPage() {
                             onSelectionChange={setSelectedIds}
                             columnVisibility={columnVisibility}
                             onColumnVisibilityChange={setColumnVisibility}
+                            columnOrder={columnOrder}
+                            onColumnOrderChange={setColumnOrder}
                             sorting={sorting}
                             onSortingChange={(newSorting) => {
                                 setSorting(newSorting)

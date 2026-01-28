@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-01-27] - Dynamic Column Reordering
+
+### Added
+- **Dynamic Column Reordering**: 
+    - Implemented native HTML5 Drag and Drop for table columns via new Grip handles.
+    - Added keyboard/accessible reordering via "Move Up/Down" buttons in the "Columns" toggle menu.
+    - Synchronized column order between the table view and the toggle menu.
+- **Shared State**: Lifted `columnOrder` to the page level to ensure persistence and UI consistency.
+- **UI Refinement**: Reduced header and cell padding to exactly 4px (px-1) for a tighter, more data-dense look.
+
+### Fixed
+- **Interaction Conflicts**: Prevented row click (detail panel) from firing immediately after a column drag operation.
+- **Unified Header Alignment**: Standardized the layout across both sortable and non-sortable columns, ensuring consistent spacing from the grip handle to the label. Sorting icons are now right-aligned within the header cell.
+- **Overlap Fix**: Resolved issue where grip handles covered header text by removing negative margins and nested paddings.
+
 ## [2026-01-27] - Category Column & Filter dropdown with counts
 
 ### Added

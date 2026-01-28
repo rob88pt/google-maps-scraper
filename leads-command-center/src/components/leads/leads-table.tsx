@@ -12,8 +12,9 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone, GripVertical } from 'lucide-react'
 
+import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -52,6 +53,8 @@ interface LeadsTableProps {
     onColumnVisibilityChange?: (visibility: VisibilityState) => void
     sorting?: SortingState
     onSortingChange?: (sorting: SortingState) => void
+    columnOrder?: string[]
+    onColumnOrderChange?: (order: string[]) => void
 }
 
 // Helper for column labels
@@ -148,6 +151,7 @@ export const columns: ColumnDef<LeadRow>[] = [
         enableSorting: false,
         enableHiding: false,
         size: 40,
+        meta: { reorderable: false },
     },
     {
         accessorKey: 'thumbnail',
@@ -168,19 +172,11 @@ export const columns: ColumnDef<LeadRow>[] = [
         },
         enableSorting: false,
         size: 50,
+        id: 'thumbnail',
     },
     {
         accessorKey: 'title',
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                className="text-slate-400 hover:text-white -ml-4"
-            >
-                Name
-                <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-            </Button>
-        ),
+        header: 'Name',
         cell: ({ row }) => (
             <div className="font-medium text-white whitespace-normal break-words">
                 {row.getValue('title')}
@@ -189,58 +185,25 @@ export const columns: ColumnDef<LeadRow>[] = [
         size: 250,
     },
     {
-        accessorKey: 'category',
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                className="text-slate-400 hover:text-white -ml-4"
-            >
-                Category
-                <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-            </Button>
+        accessorKey: 'review_rating',
+        header: 'Rating',
+        cell: ({ row }) => (
+            <RatingDisplay
+                rating={row.getValue('review_rating') as number}
+                count={row.original.review_count}
+            />
         ),
+        size: 120,
+    },
+    {
+        accessorKey: 'category',
+        header: 'Category',
         cell: ({ row }) => (
             <div className="text-sm text-slate-300 whitespace-normal break-words">
                 {row.getValue('category') || '—'}
             </div>
         ),
         size: 180,
-    },
-    {
-        id: 'input_id',
-        accessorKey: 'input_id',
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                className="text-slate-400 hover:text-white -ml-4"
-            >
-                Query
-                <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-            </Button>
-        ),
-        cell: ({ row }) => (
-            <div className="text-sm text-slate-400">
-                {row.getValue('input_id')}
-            </div>
-        ),
-        size: 150,
-    },
-    {
-        accessorKey: 'complete_address',
-        header: 'Location',
-        cell: ({ row }) => {
-            const addr = row.original.complete_address
-            const city = addr?.city || ''
-            const state = addr?.state || ''
-            return (
-                <div className="text-sm text-slate-300 whitespace-normal break-words">
-                    {city}{city && state ? ', ' : ''}{state}
-                </div>
-            )
-        },
-        size: 200,
     },
     {
         accessorKey: 'web_site',
@@ -288,30 +251,36 @@ export const columns: ColumnDef<LeadRow>[] = [
         size: 150,
     },
     {
-        accessorKey: 'review_rating',
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                className="text-slate-400 hover:text-white -ml-4"
-            >
-                Rating
-                <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-            </Button>
-        ),
-        cell: ({ row }) => (
-            <RatingDisplay
-                rating={row.getValue('review_rating') as number}
-                count={row.original.review_count}
-            />
-        ),
-        size: 120,
+        accessorKey: 'complete_address',
+        header: 'Location',
+        cell: ({ row }) => {
+            const addr = row.original.complete_address
+            const city = addr?.city || ''
+            const state = addr?.state || ''
+            return (
+                <div className="text-sm text-slate-300 whitespace-normal break-words">
+                    {city}{city && state ? ', ' : ''}{state}
+                </div>
+            )
+        },
+        size: 200,
     },
     {
         id: 'indicators',
         header: 'Data',
         cell: ({ row }) => <DataIndicators lead={row.original} />,
         enableSorting: false,
+        size: 150,
+    },
+    {
+        id: 'input_id',
+        accessorKey: 'input_id',
+        header: 'Query',
+        cell: ({ row }) => (
+            <div className="text-sm text-slate-400">
+                {row.getValue('input_id')}
+            </div>
+        ),
         size: 150,
     },
     {
@@ -385,8 +354,12 @@ export const columns: ColumnDef<LeadRow>[] = [
             )
         },
         size: 50,
+        meta: { reorderable: false },
     },
 ]
+
+// Shared source of truth for column IDs
+export const defaultColumnOrder = columns.map(c => c.id || (c as any).accessorKey)
 
 export function LeadsTable({
     data,
@@ -398,11 +371,15 @@ export function LeadsTable({
     onColumnVisibilityChange: onColumnVisibilityChangeProp,
     sorting: sortingProp,
     onSortingChange: onSortingChangeProp,
+    columnOrder: columnOrderProp,
+    onColumnOrderChange: onColumnOrderChangeProp,
 }: LeadsTableProps) {
     const [internalSorting, setInternalSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [internalColumnVisibility, setInternalColumnVisibility] = React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
+    const [internalColumnOrder, setInternalColumnOrder] = React.useState<string[]>(defaultColumnOrder)
+    const [isDragging, setIsDragging] = React.useState(false)
 
     const sorting = sortingProp ?? internalSorting
     const setSorting = (updaterOrValue: any) => {
@@ -421,6 +398,16 @@ export function LeadsTable({
             onColumnVisibilityChangeProp(newValue)
         } else {
             setInternalColumnVisibility(updaterOrValue)
+        }
+    }
+
+    const columnOrder = columnOrderProp ?? internalColumnOrder
+    const setColumnOrder = (updaterOrValue: any) => {
+        if (onColumnOrderChangeProp) {
+            const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(columnOrder) : updaterOrValue
+            onColumnOrderChangeProp(newValue)
+        } else {
+            setInternalColumnOrder(updaterOrValue)
         }
     }
 
@@ -450,13 +437,42 @@ export function LeadsTable({
         getCoreRowModel: getCoreRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
+        onColumnOrderChange: setColumnOrder,
         state: {
             sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
+            columnOrder,
         },
     })
+
+    // DND Handlers
+    const onDragStart = (columnId: string) => {
+        setIsDragging(true)
+    }
+
+    const onDragEnd = () => {
+        // Delay clearing isDragging to prevent immediate row click
+        setTimeout(() => setIsDragging(false), 100)
+    }
+
+    const onDragOver = (e: React.DragEvent, targetId: string) => {
+        e.preventDefault()
+    }
+
+    const onDrop = (e: React.DragEvent, targetId: string) => {
+        e.preventDefault()
+        const draggedId = e.dataTransfer.getData('columnId')
+        if (draggedId && draggedId !== targetId) {
+            const newOrder = [...columnOrder]
+            const oldIndex = newOrder.indexOf(draggedId)
+            const newIndex = newOrder.indexOf(targetId)
+            newOrder.splice(oldIndex, 1)
+            newOrder.splice(newIndex, 0, draggedId)
+            setColumnOrder(newOrder)
+        }
+    }
 
     // Sync selection with parent
     React.useEffect(() => {
@@ -493,30 +509,71 @@ export function LeadsTable({
                     <TableHeader className="bg-slate-900 border-b border-slate-800 sticky top-0 z-20">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id} className="border-slate-800 hover:bg-transparent">
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead
-                                        key={header.id}
-                                        className="text-slate-400 relative group/header bg-slate-900 z-10"
-                                        style={{ width: header.getSize() }}
-                                    >
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext()
-                                            )}
-
-                                        {/* Resize Handle */}
-                                        <div
-                                            onMouseDown={header.getResizeHandler()}
-                                            onTouchStart={header.getResizeHandler()}
-                                            className={`absolute right-0 top-0 h-full w-5 cursor-col-resize select-none touch-none flex justify-center group/resizer translate-x-1/2 z-10`}
+                                {headerGroup.headers.map((header) => {
+                                    const isReorderable = (header.column.columnDef.meta as any)?.reorderable !== false && !header.isPlaceholder
+                                    return (
+                                        <TableHead
+                                            key={header.id}
+                                            className={`text-slate-400 relative group/header bg-slate-900 z-10 px-1 ${isDragging ? 'select-none' : ''}`}
+                                            style={{ width: header.getSize() }}
+                                            onDragOver={(e) => isReorderable && onDragOver(e, header.id)}
+                                            onDrop={(e) => isReorderable && onDrop(e, header.id)}
                                         >
-                                            <div className={`w-[2px] h-full transition-colors group-hover/resizer:bg-blue-500/50 ${header.column.getIsResizing() ? 'bg-blue-500' : 'bg-slate-700'
-                                                }`} />
-                                        </div>
-                                    </TableHead>
-                                ))}
+                                            <div className="flex items-center justify-between w-full">
+                                                <div className="flex items-center gap-1 overflow-hidden">
+                                                    {isReorderable && (
+                                                        <div
+                                                            draggable
+                                                            onDragStart={(e) => {
+                                                                e.dataTransfer.setData('columnId', header.id)
+                                                                onDragStart(header.id)
+                                                            }}
+                                                            onDragEnd={onDragEnd}
+                                                            className="cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 transition-colors shrink-0"
+                                                        >
+                                                            <GripVertical className="h-3.5 w-3.5" />
+                                                        </div>
+                                                    )}
+                                                    <div
+                                                        className={cn(
+                                                            "truncate select-none",
+                                                            header.column.getCanSort() && "cursor-pointer hover:text-white transition-colors"
+                                                        )}
+                                                        onClick={header.column.getToggleSortingHandler()}
+                                                    >
+                                                        {header.isPlaceholder
+                                                            ? null
+                                                            : flexRender(
+                                                                header.column.columnDef.header,
+                                                                header.getContext()
+                                                            )}
+                                                    </div>
+                                                </div>
+                                                {header.column.getCanSort() && (
+                                                    <div
+                                                        className="cursor-pointer hover:text-white transition-colors shrink-0 p-0.5 ml-1"
+                                                        onClick={header.column.getToggleSortingHandler()}
+                                                    >
+                                                        <ArrowUpDown className={cn(
+                                                            "h-3 w-3",
+                                                            header.column.getIsSorted() ? "text-blue-400" : "text-slate-600"
+                                                        )} />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Resize Handle */}
+                                            <div
+                                                onMouseDown={header.getResizeHandler()}
+                                                onTouchStart={header.getResizeHandler()}
+                                                className={`absolute right-0 top-0 h-full w-5 cursor-col-resize select-none touch-none flex justify-center group/resizer translate-x-1/2 z-10`}
+                                            >
+                                                <div className={`w-[2px] h-full transition-colors group-hover/resizer:bg-blue-500/50 ${header.column.getIsResizing() ? 'bg-blue-500' : 'bg-slate-700'
+                                                    }`} />
+                                            </div>
+                                        </TableHead>
+                                    )
+                                })}
                             </TableRow>
                         ))}
                     </TableHeader>
@@ -527,13 +584,13 @@ export function LeadsTable({
                                     key={row.id}
                                     data-state={row.getIsSelected() && 'selected'}
                                     className="border-slate-800 hover:bg-slate-800/50 cursor-pointer"
-                                    onClick={() => onRowClick?.(row.original)}
+                                    onClick={() => !isDragging && onRowClick?.(row.original)}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell
                                             key={cell.id}
                                             style={{ width: cell.column.getSize() }}
-                                            className="overflow-hidden align-top py-3"
+                                            className="overflow-hidden align-top py-3 px-1"
                                         >
                                             <div className="whitespace-normal break-words">
                                                 {flexRender(

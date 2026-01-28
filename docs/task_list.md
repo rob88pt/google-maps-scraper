@@ -1,9 +1,8 @@
 # Task List
 
-## 🟡 In Progress
-- [/] Implement Server-Side Sorting for Leads Table (added: 2026-01-27)
-  - derives sortBy/sortOrder from table state
-  - supports Name, Category, Rating, and Query columns
+## ✅ Done
+- [x] Implement Dynamic Column Reordering (DND + Keyboard) (2026-01-27)
+- [x] Implement Server-Side Sorting for Leads Table (2026-01-27)
 
 ## 📋 Backlog (To Do)
 - [ ] System Testing: Verify end-to-end stability for sync and decoupled scraper from DB. (added: 2026-01-23)
