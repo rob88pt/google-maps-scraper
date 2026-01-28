@@ -32,14 +32,14 @@ export async function GET(request: NextRequest) {
             .from('results')
             .select('data')
 
-        // Apply filters
+        // Apply search filters using the optimized search_index column
         if (search) {
-            query = query.or(
-                `data->>title.ilike.%${search}%,` +
-                `data->>category.ilike.%${search}%,` +
-                `data->>address.ilike.%${search}%,` +
-                `data->complete_address->>city.ilike.%${search}%`
-            )
+            const normalizedSearch = search
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+
+            query = query.ilike('search_index', `%${normalizedSearch}%`)
         }
 
         if (minRating > 0) query = query.gte('data->review_rating', minRating)

@@ -1,6 +1,7 @@
 # Active Context
 
 ## Recent Changes
+- **[2026-01-28]** Implemented **Search by Query**: Global leads search now includes the original scraping query (`input_id`). Updated the search placeholder for better user guidance.
 - **[2026-01-28]** Implemented **Global Glass Scrollbars**: The premium "Glass" aesthetic is now applied automatically to Every scrollable element in the application for a cohesive UI.
 - **[2026-01-28]** Added **Dialog Scrolling**: The Job Configuration dialog now includes vertical scrolling, ensuring accessibility on small screens.
 - **[2026-01-28]** Implemented **Resend Job**: Users can now duplicate and rerun any existing job via the job queue menu or the job configuration dialog.

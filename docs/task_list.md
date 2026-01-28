@@ -16,17 +16,16 @@
 - [x] Refine UI Density & Spacing (Search bar, Pagination) (2026-01-28)
 - [x] Implement Dynamic Column Reordering (DND + Keyboard) (2026-01-27)
 - [x] Implement Server-Side Sorting for Leads Table (2026-01-27)
-
-## 📋 Backlog (To Do)
-- [ ] System Testing: Verify end-to-end stability for sync and decoupled scraper from DB. (added: 2026-01-23)
-
-## ✅ Done
-- [x] Implement Server-Side Sorting for Leads Table (2026-01-27)
 - [x] Implement Category Column & Filter dropdown with counts (2026-01-27)
 - [x] Consolidate Leads toolbar: Move 'Columns' selector to main toolbar (2026-01-27)
 - [x] Refine Leads Page UI: Remove redundant heading and reposition lead count (2026-01-27)
 - [x] Fix Leads Table scrolling issue and implement sticky header (2026-01-27)
 - [x] Laptop/Desktop Responsiveness & Overlay Mode (2026-01-27)
+
+## 📋 Backlog (To Do)
+- [ ] System Testing: Verify end-to-end stability for sync and decoupled scraper from DB. (added: 2026-01-23)
+
+## ✅ Done
 - [x] Restore Map Functionality & Image Markers (2026-01-27)
 - [x] Implement CRM Feature (Status + Notes) in UI and API (2026-01-27)
 - [x] Integrate Nominatim Coordinate Picker (2026-01-27)

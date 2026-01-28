@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026-01-28] - Search by Query Functionality
+
+### Added
+- **Query String Search**: Global leads search now includes the original search query (`input_id`). Users can type terms used during the scraping job (e.g., "plumbers") to filter results.
+- **Concise Search UI**: Updated search box placeholder to `"Search by name, category, location or query..."` for better clarity.
+
+### Changed
+- **Backend Search Logic**: Refined the Supabase `OR` query to cross-reference `data->>input_id` without introducing metadata noise (removed experimental Job ID/Metadata search fields).
+
+### Files Affected
+- `leads-command-center/src/app/api/leads/route.ts`
+- `leads-command-center/src/app/leads/page.tsx`
+
 ## [2026-01-28] - Filter UI Overhaul & "No Reviews" Filter
 
 ### Added

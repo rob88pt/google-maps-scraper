@@ -58,17 +58,15 @@ export async function GET(request: NextRequest) {
         // Apply JSONB filters using Supabase's json operators
         // Note: These work on the 'data' JSONB column
 
-        // For search, we need to use textSearch or ilike on extracted fields
-        // Supabase supports: data->>'field' for text extraction
+        // For search, we use the optimized search_index column
+        // We normalize the search term to match the index (lowercase + unaccented)
         if (search) {
-            // Search in title, category, address, and website
-            query = query.or(
-                `data->>title.ilike.%${search}%,` +
-                `data->>category.ilike.%${search}%,` +
-                `data->>address.ilike.%${search}%,` +
-                `data->>web_site.ilike.%${search}%,` +
-                `data->complete_address->>city.ilike.%${search}%`
-            )
+            const normalizedSearch = search
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+
+            query = query.ilike('search_index', `%${normalizedSearch}%`)
         }
 
         // Category filter
