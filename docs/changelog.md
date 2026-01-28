@@ -1,4 +1,19 @@
 # Changelog
+2: 
+3: ## [2026-01-28] - Table Layout Persistence
+4: 
+5: ### Added
+6: - **Layout Persistence**: Column widths, ordering, and visibility are now saved in `localStorage`.
+7: - **useLocalStorage Hook**: Created a robust, SSR-safe hook for persisting state between sessions.
+8: 
+9: ### Changed
+10: - **LeadsTable Integration**: Updated component to support column sizing and visibility persistence.
+11: 
+12: ### Files Affected
+13: - `leads-command-center/src/lib/hooks/use-local-storage.ts`
+14: - `leads-command-center/src/components/leads/leads-table.tsx`
+15: - `leads-command-center/src/app/leads/page.tsx`
+16: 
 
 ## [2026-01-28] - Search by Query Functionality
 

@@ -27,6 +27,8 @@
 
 ## ✅ Done
 - [x] Restore Map Functionality & Image Markers (2026-01-27)
+- [x] Save table layout in between sessions (done: 2026-01-28)
+- [x] Refine Search Functionality (done: 2026-01-28)
 - [x] Implement CRM Feature (Status + Notes) in UI and API (2026-01-27)
 - [x] Integrate Nominatim Coordinate Picker (2026-01-27)
 - [x] Fix Data Traceability (input_id mapping) (2026-01-27)

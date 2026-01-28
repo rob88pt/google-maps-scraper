@@ -21,6 +21,7 @@ import { useCategories } from "@/lib/hooks/use-categories"
 import { CategoryFilter } from "@/components/leads/category-filter"
 import { useDebounce } from "@/lib/hooks/use-debounce"
 import { useMediaQuery } from "@/lib/hooks/use-media-query"
+import { useLocalStorage } from "@/lib/hooks/use-local-storage"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import {
     DropdownMenuCheckboxItem,
@@ -40,8 +41,9 @@ export default function LeadsPage() {
     const [page, setPage] = React.useState(1)
     const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
     const [sorting, setSorting] = React.useState<SortingState>([{ id: 'created_at', desc: true }])
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-    const [columnOrder, setColumnOrder] = React.useState<string[]>(defaultColumnOrder)
+    const [columnVisibility, setColumnVisibility] = useLocalStorage<VisibilityState>('leads-column-visibility', {})
+    const [columnOrder, setColumnOrder] = useLocalStorage<string[]>('leads-column-order', defaultColumnOrder)
+    const [columnSizing, setColumnSizing] = useLocalStorage<Record<string, number>>('leads-column-sizing', {})
 
     const hasInitializedVisibility = React.useRef(false)
 
@@ -75,19 +77,20 @@ export default function LeadsPage() {
     // Fetch categories
     const { data: categoriesData, isLoading: isCategoriesLoading } = useCategories(queryOptions)
 
-    // Set responsive column defaults on mount
+    // Set responsive column defaults on mount ONLY if no saved state exists
     React.useEffect(() => {
         if (!hasInitializedVisibility.current && !isLoading) {
-            if (!isDesktop) {
-                setColumnVisibility((prev) => ({
-                    ...prev,
+            const savedVisibility = window.localStorage.getItem('leads-column-visibility')
+
+            if (!savedVisibility && !isDesktop) {
+                setColumnVisibility({
                     input_id: false,
                     indicators: false,
-                }))
+                })
             }
             hasInitializedVisibility.current = true
         }
-    }, [isDesktop, isLoading])
+    }, [isDesktop, isLoading, setColumnVisibility])
 
     // Export handlers
     const handleExport = async (format: 'csv' | 'json' | 'google-contacts') => {
@@ -295,6 +298,8 @@ export default function LeadsPage() {
                             onColumnVisibilityChange={setColumnVisibility}
                             columnOrder={columnOrder}
                             onColumnOrderChange={setColumnOrder}
+                            columnSizing={columnSizing}
+                            onColumnSizingChange={setColumnSizing}
                             sorting={sorting}
                             onSortingChange={(newSorting) => {
                                 setSorting(newSorting)

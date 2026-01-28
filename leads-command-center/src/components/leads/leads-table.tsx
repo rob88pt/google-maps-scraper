@@ -56,6 +56,8 @@ interface LeadsTableProps {
     onSortingChange?: (sorting: SortingState) => void
     columnOrder?: string[]
     onColumnOrderChange?: (order: string[]) => void
+    columnSizing?: Record<string, number>
+    onColumnSizingChange?: (sizing: Record<string, number>) => void
 }
 
 // Helper for column labels
@@ -474,12 +476,15 @@ export function LeadsTable({
     onSortingChange: onSortingChangeProp,
     columnOrder: columnOrderProp,
     onColumnOrderChange: onColumnOrderChangeProp,
+    columnSizing: columnSizingProp,
+    onColumnSizingChange: onColumnSizingChangeProp,
 }: LeadsTableProps) {
     const [internalSorting, setInternalSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [internalColumnVisibility, setInternalColumnVisibility] = React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
     const [internalColumnOrder, setInternalColumnOrder] = React.useState<string[]>(defaultColumnOrder)
+    const [internalColumnSizing, setInternalColumnSizing] = React.useState<Record<string, number>>({})
     const [isDragging, setIsDragging] = React.useState(false)
 
     const sorting = sortingProp ?? internalSorting
@@ -509,6 +514,16 @@ export function LeadsTable({
             onColumnOrderChangeProp(newValue)
         } else {
             setInternalColumnOrder(updaterOrValue)
+        }
+    }
+
+    const columnSizing = columnSizingProp ?? internalColumnSizing
+    const setColumnSizing = (updaterOrValue: any) => {
+        if (onColumnSizingChangeProp) {
+            const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(columnSizing) : updaterOrValue
+            onColumnSizingChangeProp(newValue)
+        } else {
+            setInternalColumnSizing(updaterOrValue)
         }
     }
 
@@ -545,7 +560,9 @@ export function LeadsTable({
             columnVisibility,
             rowSelection,
             columnOrder,
+            columnSizing,
         },
+        onColumnSizingChange: setColumnSizing,
     })
 
     // DND Handlers
