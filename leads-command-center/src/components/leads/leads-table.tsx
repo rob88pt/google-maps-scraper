@@ -179,27 +179,47 @@ export const columns: ColumnDef<LeadRow>[] = [
     {
         id: 'select',
         header: ({ table }) => (
-            <Checkbox
-                checked={
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && 'indeterminate')
-                }
-                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                aria-label="Select all"
-                className="border-slate-600"
-            />
+            <div
+                className="flex items-center justify-center h-full w-full cursor-pointer"
+                style={{ minHeight: '44px' }}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    table.toggleAllPageRowsSelected(!table.getIsAllPageRowsSelected())
+                }}
+            >
+                <Checkbox
+                    checked={
+                        table.getIsAllPageRowsSelected() ||
+                        (table.getIsSomePageRowsSelected() && 'indeterminate')
+                    }
+                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                    aria-label="Select all"
+                    className="border-slate-600"
+                    onClick={(e) => e.stopPropagation()}
+                />
+            </div>
         ),
         cell: ({ row }) => (
-            <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label="Select row"
-                className="border-slate-600"
-            />
+            <div
+                className="flex items-center justify-center h-full w-full cursor-pointer"
+                style={{ minHeight: '48px' }}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    row.toggleSelected(!row.getIsSelected())
+                }}
+            >
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    aria-label="Select row"
+                    className="border-slate-600"
+                    onClick={(e) => e.stopPropagation()}
+                />
+            </div>
         ),
         enableSorting: false,
         enableHiding: false,
-        size: 40,
+        size: 44,
         meta: { reorderable: false },
     },
     {
@@ -482,7 +502,6 @@ export function LeadsTable({
     const [internalSorting, setInternalSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [internalColumnVisibility, setInternalColumnVisibility] = React.useState<VisibilityState>({})
-    const [rowSelection, setRowSelection] = React.useState({})
     const [internalColumnOrder, setInternalColumnOrder] = React.useState<string[]>(defaultColumnOrder)
     const [internalColumnSizing, setInternalColumnSizing] = React.useState<Record<string, number>>({})
     const [isDragging, setIsDragging] = React.useState(false)
@@ -528,25 +547,33 @@ export function LeadsTable({
     }
 
     const isDesktop = useMediaQuery("(min-width: 1280px)")
-    const hasInitializedVisibility = React.useRef(false)
 
-    // Set responsive column defaults on mount
-    React.useEffect(() => {
-        if (!hasInitializedVisibility.current && !isLoading) {
-            if (!isDesktop) {
-                setColumnVisibility((prev: VisibilityState) => ({
-                    ...prev,
-                    input_id: false,
-                    indicators: false,
-                }))
+    // Convert Set<number> to Record<string, boolean> for React Table
+    const rowSelection = React.useMemo(() => {
+        const selection: Record<string, boolean> = {}
+        selectedIds?.forEach(id => {
+            selection[id.toString()] = true
+        })
+        return selection
+    }, [selectedIds])
+
+    const setRowSelection = (updaterOrValue: any) => {
+        if (!onSelectionChange) return
+
+        const nextSelection = typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue
+        const nextIds = new Set<number>()
+        Object.keys(nextSelection).forEach(id => {
+            if (nextSelection[id]) {
+                nextIds.add(parseInt(id))
             }
-            hasInitializedVisibility.current = true
-        }
-    }, [isDesktop, isLoading])
+        })
+        onSelectionChange(nextIds)
+    }
 
     const table = useReactTable({
         data,
         columns,
+        getRowId: (row) => row.id.toString(),
         columnResizeMode: 'onChange',
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -563,6 +590,7 @@ export function LeadsTable({
             columnSizing,
         },
         onColumnSizingChange: setColumnSizing,
+        enableRowSelection: true,
     })
 
     // DND Handlers
@@ -591,15 +619,6 @@ export function LeadsTable({
             setColumnOrder(newOrder)
         }
     }
-
-    // Sync selection with parent
-    React.useEffect(() => {
-        if (onSelectionChange) {
-            const selectedRows = table.getSelectedRowModel().rows
-            const ids = new Set(selectedRows.map(row => row.original.id))
-            onSelectionChange(ids)
-        }
-    }, [rowSelection, table, onSelectionChange])
 
     if (isLoading) {
         return (
@@ -632,53 +651,64 @@ export function LeadsTable({
                                     return (
                                         <TableHead
                                             key={header.id}
-                                            className={`text-slate-400 relative group/header bg-slate-900 z-20 px-1 sticky top-0 ${isDragging ? 'select-none' : ''}`}
+                                            className={cn(
+                                                "text-slate-400 relative group/header bg-slate-900 z-20 sticky top-0",
+                                                header.id === 'select' ? "p-0" : "px-1",
+                                                isDragging && "select-none"
+                                            )}
                                             style={{ width: header.getSize() }}
                                             onDragOver={(e) => isReorderable && onDragOver(e, header.id)}
                                             onDrop={(e) => isReorderable && onDrop(e, header.id)}
                                         >
-                                            <div className="flex items-center justify-between w-full">
-                                                <div className="flex items-center gap-1 overflow-hidden">
-                                                    {isReorderable && (
+                                            {header.id === 'select' ? (
+                                                flexRender(
+                                                    header.column.columnDef.header,
+                                                    header.getContext()
+                                                )
+                                            ) : (
+                                                <div className="flex items-center justify-between w-full">
+                                                    <div className="flex items-center gap-1 overflow-hidden">
+                                                        {isReorderable && (
+                                                            <div
+                                                                draggable
+                                                                onDragStart={(e) => {
+                                                                    e.dataTransfer.setData('columnId', header.id)
+                                                                    onDragStart(header.id)
+                                                                }}
+                                                                onDragEnd={onDragEnd}
+                                                                className="cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 transition-colors shrink-0"
+                                                            >
+                                                                <GripVertical className="h-3.5 w-3.5" />
+                                                            </div>
+                                                        )}
                                                         <div
-                                                            draggable
-                                                            onDragStart={(e) => {
-                                                                e.dataTransfer.setData('columnId', header.id)
-                                                                onDragStart(header.id)
-                                                            }}
-                                                            onDragEnd={onDragEnd}
-                                                            className="cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 transition-colors shrink-0"
+                                                            className={cn(
+                                                                "truncate select-none",
+                                                                header.column.getCanSort() && "cursor-pointer hover:text-white transition-colors"
+                                                            )}
+                                                            onClick={header.column.getToggleSortingHandler()}
                                                         >
-                                                            <GripVertical className="h-3.5 w-3.5" />
+                                                            {header.isPlaceholder
+                                                                ? null
+                                                                : flexRender(
+                                                                    header.column.columnDef.header,
+                                                                    header.getContext()
+                                                                )}
+                                                        </div>
+                                                    </div>
+                                                    {header.column.getCanSort() && (
+                                                        <div
+                                                            className="cursor-pointer hover:text-white transition-colors shrink-0 p-0.5 ml-1"
+                                                            onClick={header.column.getToggleSortingHandler()}
+                                                        >
+                                                            <ArrowUpDown className={cn(
+                                                                "h-3 w-3",
+                                                                header.column.getIsSorted() ? "text-blue-400" : "text-slate-600"
+                                                            )} />
                                                         </div>
                                                     )}
-                                                    <div
-                                                        className={cn(
-                                                            "truncate select-none",
-                                                            header.column.getCanSort() && "cursor-pointer hover:text-white transition-colors"
-                                                        )}
-                                                        onClick={header.column.getToggleSortingHandler()}
-                                                    >
-                                                        {header.isPlaceholder
-                                                            ? null
-                                                            : flexRender(
-                                                                header.column.columnDef.header,
-                                                                header.getContext()
-                                                            )}
-                                                    </div>
                                                 </div>
-                                                {header.column.getCanSort() && (
-                                                    <div
-                                                        className="cursor-pointer hover:text-white transition-colors shrink-0 p-0.5 ml-1"
-                                                        onClick={header.column.getToggleSortingHandler()}
-                                                    >
-                                                        <ArrowUpDown className={cn(
-                                                            "h-3 w-3",
-                                                            header.column.getIsSorted() ? "text-blue-400" : "text-slate-600"
-                                                        )} />
-                                                    </div>
-                                                )}
-                                            </div>
+                                            )}
 
                                             {/* Resize Handle */}
                                             <div
@@ -702,13 +732,31 @@ export function LeadsTable({
                                     key={row.id}
                                     data-state={row.getIsSelected() && 'selected'}
                                     className="border-slate-800 hover:bg-slate-800/50 cursor-pointer"
-                                    onClick={() => !isDragging && onRowClick?.(row.original)}
+                                    onClick={(e) => {
+                                        // Ignore clicks on buttons, links, or checkboxes to allow their own handlers to run
+                                        const target = e.target as HTMLElement
+                                        if (
+                                            target.closest('button') ||
+                                            target.closest('a') ||
+                                            target.closest('[role="checkbox"]') ||
+                                            target.closest('[data-slot="checkbox"]')
+                                        ) {
+                                            return
+                                        }
+
+                                        if (!isDragging) {
+                                            onRowClick?.(row.original)
+                                        }
+                                    }}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell
                                             key={cell.id}
                                             style={{ width: cell.column.getSize() }}
-                                            className="overflow-hidden align-top py-3 px-1"
+                                            className={cn(
+                                                "overflow-hidden align-top py-3 px-1",
+                                                cell.column.id === 'select' && "p-0 align-middle"
+                                            )}
                                         >
                                             <div className="whitespace-normal break-words">
                                                 {flexRender(

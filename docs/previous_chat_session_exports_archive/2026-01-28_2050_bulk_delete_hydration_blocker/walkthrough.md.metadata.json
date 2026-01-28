@@ -1,0 +1,5 @@
+{
+  "artifactType": "ARTIFACT_TYPE_WALKTHROUGH",
+  "summary": "Walkthrough for table layout persistence implementation. Shows how column width, ordering, and visibility are saved between sessions.",
+  "updatedAt": "2026-01-28T19:33:25.436473600Z"
+}

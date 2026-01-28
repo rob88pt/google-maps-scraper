@@ -197,3 +197,42 @@ export async function GET(request: NextRequest) {
         )
     }
 }
+
+/**
+ * DELETE /api/leads
+ * Deletes multiple leads by ID.
+ */
+export async function DELETE(request: NextRequest) {
+    try {
+        const supabase = await createClient()
+        const { ids } = await request.json()
+
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return NextResponse.json(
+                { error: 'Invalid or empty IDs array provided.' },
+                { status: 400 }
+            )
+        }
+
+        const { error } = await supabase
+            .from('results')
+            .delete()
+            .in('id', ids)
+
+        if (error) {
+            console.error('[API] Failed to delete leads:', error)
+            return NextResponse.json(
+                { error: 'Failed to delete leads.', details: error.message },
+                { status: 500 }
+            )
+        }
+
+        return NextResponse.json({ success: true, count: ids.length })
+    } catch (error) {
+        console.error('[API] Unexpected error during delete:', error)
+        return NextResponse.json(
+            { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown' },
+            { status: 500 }
+        )
+    }
+}

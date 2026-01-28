@@ -1,0 +1,51 @@
+# Leads Command Center - Session Handoff
+
+## Project
+- **Location:** `d:\Websites\GMaps_scraper_gosom`
+- **Repo:** `rob88pt/google-maps-scraper`
+
+## User's Goal
+Implement persistence for the leads table layout, ensuring that column widths, ordering, and visibility preferences are saved in `localStorage` and restored automatically across sessions.
+
+---
+
+## Files Created
+| File                                                                                                                    | Purpose                                                       |
+| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [use-local-storage.ts](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/lib/hooks/use-local-storage.ts) | Generic SSR-safe hook for persisting state in `localStorage`. |
+
+## Files Modified
+| File                                                                                                                 | What Changed                                                                            |
+| -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [leads-table.tsx](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/components/leads/leads-table.tsx) | Added support for `columnSizing` persistence and coordinated visibility/ordering state. |
+| [page.tsx](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/app/leads/page.tsx)                      | Integrated `useLocalStorage` for columnVisibility, columnOrder, and columnSizing.       |
+| [active_context.md](file:///d:/Websites/GMaps_scraper_gosom/docs/active_context.md)                                  | Logged table layout persistence implementation.                                         |
+| [changelog.md](file:///d:/Websites/GMaps_scraper_gosom/docs/changelog.md)                                            | Added detailed entry for layout persistence changes.                                    |
+| [task_list.md](file:///d:/Websites/GMaps_scraper_gosom/docs/task_list.md)                                            | Moved layout persistence tasks to "Done".                                               |
+
+## Key Reference Files
+| File                                                                                                                    | Why It Matters                                  |
+| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| [use-local-storage.ts](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/lib/hooks/use-local-storage.ts) | Core persistence logic used throughout the app. |
+| [leads-table.tsx](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/components/leads/leads-table.tsx)    | Table component managing the layout state.      |
+
+---
+
+## What Was Implemented
+- **Robust Persistence**: Column widths, order, and toggled visibility are now saved in the browser.
+- **SSR Safety**: Fixed an initial infinite loop crash by ensuring the hook is Next.js/SSR-safe and handles hydration correctly.
+- **Responsive Logic**: Mobile-specific column defaults are only applied if no custom layout has been saved.
+- **Verification**: Success verified in the browser via automated reordering and resizing tests.
+
+## Remaining Work
+- [ ] Monitor `localStorage` usage as more features are added to ensure we stay within limits (not a concern for now).
+- [ ] Consider adding a "Reset Layout" button if users want to revert to defaults.
+
+## How to Run
+```bash
+cd d:\Websites\GMaps_scraper_gosom\leads-command-center
+npm run dev
+```
+
+## Dependencies Added
+- None (used native built-in hooks and browser APIs).

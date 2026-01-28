@@ -16,6 +16,7 @@ import {
 import { LeadsTable, type LeadRow, defaultColumnOrder } from "@/components/leads/leads-table"
 import { LeadsFilters, defaultFilters, type LeadsFilters as FilterType } from "@/components/leads/leads-filters"
 import { LeadDetailPanel } from "@/components/leads/lead-detail-panel"
+import { DeleteLeadsButton } from '@/components/leads/delete-leads-button'
 import { useLeads, type LeadsQueryOptions } from "@/lib/hooks/use-leads"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { CategoryFilter } from "@/components/leads/category-filter"
@@ -45,6 +46,7 @@ export default function LeadsPage() {
     const [columnOrder, setColumnOrder] = useLocalStorage<string[]>('leads-column-order', defaultColumnOrder)
     const [columnSizing, setColumnSizing] = useLocalStorage<Record<string, number>>('leads-column-sizing', {})
 
+    const [hasMounted, setHasMounted] = React.useState(false)
     const hasInitializedVisibility = React.useRef(false)
 
     // Breakpoint for overlay: 1280px (xl)
@@ -77,9 +79,14 @@ export default function LeadsPage() {
     // Fetch categories
     const { data: categoriesData, isLoading: isCategoriesLoading } = useCategories(queryOptions)
 
+    // Hydration guard
+    React.useEffect(() => {
+        setHasMounted(true)
+    }, [])
+
     // Set responsive column defaults on mount ONLY if no saved state exists
     React.useEffect(() => {
-        if (!hasInitializedVisibility.current && !isLoading) {
+        if (hasMounted && !hasInitializedVisibility.current && !isLoading) {
             const savedVisibility = window.localStorage.getItem('leads-column-visibility')
 
             if (!savedVisibility && !isDesktop) {
@@ -90,7 +97,7 @@ export default function LeadsPage() {
             }
             hasInitializedVisibility.current = true
         }
-    }, [isDesktop, isLoading, setColumnVisibility])
+    }, [hasMounted, isDesktop, isLoading, setColumnVisibility])
 
     // Export handlers
     const handleExport = async (format: 'csv' | 'json' | 'google-contacts') => {
@@ -239,6 +246,11 @@ export default function LeadsPage() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
+                            <DeleteLeadsButton
+                                selectedIds={selectedIds}
+                                onSuccess={() => setSelectedIds(new Set())}
+                            />
+
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
@@ -288,24 +300,30 @@ export default function LeadsPage() {
 
                     {/* Leads table */}
                     <div className="flex-1 flex flex-col min-h-0">
-                        <LeadsTable
-                            data={data?.leads ?? []}
-                            isLoading={isLoading}
-                            onRowClick={setSelectedLead}
-                            selectedIds={selectedIds}
-                            onSelectionChange={setSelectedIds}
-                            columnVisibility={columnVisibility}
-                            onColumnVisibilityChange={setColumnVisibility}
-                            columnOrder={columnOrder}
-                            onColumnOrderChange={setColumnOrder}
-                            columnSizing={columnSizing}
-                            onColumnSizingChange={setColumnSizing}
-                            sorting={sorting}
-                            onSortingChange={(newSorting) => {
-                                setSorting(newSorting)
-                                setPage(1) // Reset to first page
-                            }}
-                        />
+                        {hasMounted ? (
+                            <LeadsTable
+                                data={data?.leads ?? []}
+                                isLoading={isLoading}
+                                onRowClick={setSelectedLead}
+                                selectedIds={selectedIds}
+                                onSelectionChange={setSelectedIds}
+                                columnVisibility={columnVisibility}
+                                onColumnVisibilityChange={setColumnVisibility}
+                                columnOrder={columnOrder}
+                                onColumnOrderChange={setColumnOrder}
+                                columnSizing={columnSizing}
+                                onColumnSizingChange={setColumnSizing}
+                                sorting={sorting}
+                                onSortingChange={(newSorting) => {
+                                    setSorting(newSorting)
+                                    setPage(1) // Reset to first page
+                                }}
+                            />
+                        ) : (
+                            <div className="flex-1 flex items-center justify-center">
+                                <div className="text-slate-500">Loading leads...</div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Pagination */}

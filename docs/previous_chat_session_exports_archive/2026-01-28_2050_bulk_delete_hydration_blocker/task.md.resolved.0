@@ -1,0 +1,12 @@
+# Task List
+
+## 📋 Backlog (To Do)
+- [ ] Save table layout in between sessions
+  - [ ] Implement `localStorage` hook for table preferences
+  - [ ] Persist `columnVisibility`
+  - [ ] Persist `columnOrder`
+  - [ ] Persist `columnSizing`
+  - [ ] Verify persistence across refreshes
+
+## ✅ Done
+- [x] Initial research and planning (added: 2026-01-28)

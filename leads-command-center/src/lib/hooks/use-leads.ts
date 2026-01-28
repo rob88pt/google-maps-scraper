@@ -189,6 +189,34 @@ export function useLeadStatus(cid: string) {
 }
 
 /**
+ * Hook to delete leads
+ */
+export function useDeleteLeads() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async (ids: number[]) => {
+            const response = await fetch('/api/leads', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids }),
+            })
+
+            if (!response.ok) {
+                const error = await response.json()
+                throw new Error(error.error || 'Failed to delete leads')
+            }
+
+            return response.json()
+        },
+        onSuccess: () => {
+            // Invalidate all leads queries to refresh the UI
+            queryClient.invalidateQueries({ queryKey: leadsKeys.all })
+        },
+    })
+}
+
+/**
  * Hook to invalidate leads queries (useful after mutations)
  */
 export function useInvalidateLeads() {

@@ -1,0 +1,47 @@
+# Implementation Plan - Save Table Layout Persistence
+
+Save the leads table layout (column width, column ordering, and visibility) between sessions using `localStorage` to improve user experience and productivity.
+
+## Proposed Changes
+
+### Lib / Hooks
+
+#### [NEW] [use-local-storage.ts](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/lib/hooks/use-local-storage.ts)
+- Implement a generic `useLocalStorage` hook that:
+  - Initializes state from `localStorage` (server-safe).
+  - Synchronizes state changes back to `localStorage`.
+  - Handles JSON serialization/deserialization.
+
+### Components / Leads
+
+#### [MODIFY] [leads-table.tsx](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/components/leads/leads-table.tsx)
+- Update [LeadsTableProps](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/components/leads/leads-table.tsx#47-60) to include `columnSizing` and `onColumnSizingChange`.
+- Pass `columnSizing` and `onColumnSizingChange` to `useReactTable`.
+- Ensure the table correctly applies `columnSizing` to `TableHead` and `TableCell` components.
+
+### App / Leads
+
+#### [MODIFY] [page.tsx](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/app/leads/page.tsx)
+- Replace standard `useState` with `useLocalStorage` for:
+  - `columnVisibility` (key: `leads-column-visibility`)
+  - `columnOrder` (key: `leads-column-order`)
+  - `columnSizing` (key: `leads-column-sizing`)
+- Update logic for responsive column defaults:
+  - Only apply mobile defaults (hiding `input_id`, `indicators`) if no saved state exists in `localStorage`.
+- Ensure all column updates (visibility, order, sizing) are correctly persisted.
+
+## Verification Plan
+
+### Manual Verification
+1. **Column Resizing**:
+   - Resize several columns to specific widths.
+   - Refresh the page and verify widths are maintained.
+2. **Column Reordering**:
+   - Move columns (e.g., "Website" to the first position) using the "Columns" menu.
+   - Refresh the page and verify the new order is maintained.
+3. **Column Visibility**:
+   - Hide specific columns (e.g., "Phone").
+   - Refresh the page and verify they remain hidden.
+4. **Responsive Behavior**:
+   - Verify that on mobile, columns are hidden by default ONLY if no previous preference was saved.
+   - Test resizing/reordering on multiple screen sizes.

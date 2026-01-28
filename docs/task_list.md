@@ -1,26 +1,10 @@
 # Task List
 
-## ✅ Done
-- [x] Implement Global "Glass" Scrollbars & Dialog scrolling (2026-01-28)
-- [x] Implement "Resend Job" (Duplicate Job) feature (2026-01-28)
-- [x] Fix Docker Inactivity Flag normalization (1 -> 1m) (2026-01-28)
-- [x] Refine Category Filter: Searchable, accent-insensitive, focus-stable (2026-01-28)
-- [x] Implement Review Count Range Filter (Min/Max) (2026-01-28)
-- [x] Overhaul Filter UI: Web Presence priority + Section headers (2026-01-28)
-- [x] Refine Range Inputs: Symmetric 2-column layout + Accessible subtitles (2026-01-28)
-- [x] Add "No Reviews" filter toggle (2026-01-28)
-- [x] Implement Social Media Icons (FB/IG/X) detection (2026-01-28)
-- [x] Fix Location column to show full address (2026-01-28)
-- [x] Implement Copy Buttons for Name, Category, and Query columns (2026-01-28)
-- [x] Fix Leads Table scrolling and sticky headers (2026-01-28)
-- [x] Refine UI Density & Spacing (Search bar, Pagination) (2026-01-28)
-- [x] Implement Dynamic Column Reordering (DND + Keyboard) (2026-01-27)
-- [x] Implement Server-Side Sorting for Leads Table (2026-01-27)
-- [x] Implement Category Column & Filter dropdown with counts (2026-01-27)
-- [x] Consolidate Leads toolbar: Move 'Columns' selector to main toolbar (2026-01-27)
-- [x] Refine Leads Page UI: Remove redundant heading and reposition lead count (2026-01-27)
-- [x] Fix Leads Table scrolling issue and implement sticky header (2026-01-27)
-- [x] Laptop/Desktop Responsiveness & Overlay Mode (2026-01-27)
+- [x] Implement Bulk Delete functionality (API, Hook, UI) (2026-01-28)
+- [x] Refine Leads Table row selection & event propagation (2026-01-28)
+- [x] Add padding to Leads Table selection column (2026-01-28)
+
+- [x] Resolve React Hydration Mismatch and Table Interactivity (2026-01-28)
 
 ## 📋 Backlog (To Do)
 - [ ] System Testing: Verify end-to-end stability for sync and decoupled scraper from DB. (added: 2026-01-23)

@@ -1,0 +1,65 @@
+# Implementation Plan - Delete Results Functionality
+
+Implement the ability to delete selected leads (results) from the Leads Command Center with a safety confirmation dialog.
+
+## User Review Required
+
+> [!IMPORTANT]
+> This action is destructive and cannot be undone. The confirmation dialog will clearly state the number of items to be deleted.
+
+## Proposed Changes
+
+### API - Backend
+
+#### [MODIFY] [route.ts](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/app/api/leads/route.ts)
+- Add a [DELETE](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/app/api/leads/route.ts#201-239) function that:
+  - Accepts a JSON body with an `ids` array.
+  - Deletes records from the `results` table where [id](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/lib/hooks/use-leads.ts#228-229) matches.
+  - Includes error handling and success response.
+
+### Hooks - Frontend
+
+#### [MODIFY] [use-leads.ts](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/lib/hooks/use-leads.ts)
+- Add [useDeleteLeads](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/lib/hooks/use-leads.ts#191-218) hook using `useMutation`.
+- Implement `deleteLeads(ids: number[])` function.
+- Invalidate the `leads` query on success to refresh the table.
+
+### Components - UI
+
+#### [MODIFY] [leads-table.tsx](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/components/leads/leads-table.tsx)
+- **Fix Selection Persistence**: Implement `getRowId: (row) => row.id.toString()` in `useReactTable` to ensure selection state is keyed by lead IDs rather than row indices.
+- **Fix Click Propagation**: 
+  - Update `TableRow` click handler to ignore clicks originating from checkboxes or buttons.
+  - Wrap the selection checkbox in a `div` that stops event propagation.
+- **Sync Selection state**: Ensure `rowSelection` internal state is cleared when the parent's `selectedIds` is reset.
+
+#### [NEW] [delete-leads-button.tsx](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/components/leads/delete-leads-button.tsx)
+- Use `@radix-ui/react-alert-dialog` for the confirmation modal.
+- Display "Delete [X] results?" message.
+- Show "Deleting..." state during the mutation.
+- integrate with [useDeleteLeads](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/lib/hooks/use-leads.ts#191-218) hook.
+
+### Pages
+
+#### [MODIFY] [page.tsx](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/app/leads/page.tsx)
+- Integrate the [DeleteLeadsButton](file:///d:/Websites/GMaps_scraper_gosom/leads-command-center/src/components/leads/delete-leads-button.tsx#25-84) into the table toolbar.
+- Only show the button when `selectedIds.size > 0`.
+- Pass `selectedIds` and a clearance function (to reset selection after delete).
+
+## Verification Plan
+
+### Manual Verification
+1. **Single Deletion**:
+   - Select one lead.
+   - Click Delete, confirm in dialog.
+   - Verify the lead is gone and the results count updates.
+2. **Bulk Deletion**:
+   - Select multiple leads (e.g., 5).
+   - Click Delete, verify the dialog shows "Delete 5 results?".
+   - Confirm and verify all are removed.
+3. **Cancel Action**:
+   - Select leads, click Delete.
+   - Click "Cancel" in the dialog.
+   - Verify no leads are deleted.
+4. **Error Handling**:
+   - Simulate a network error and verify the toast shows a failure message.

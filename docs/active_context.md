@@ -1,6 +1,19 @@
 # Active Context
 
 ## Recent Changes
+- **[2026-01-28]** Implemented **Bulk Delete Leads**:
+  - Added `DELETE /api/leads` endpoint for multi-ID deletion.
+  - Created `useDeleteLeads` hook with query invalidation.
+  - Developed `DeleteLeadsButton` with confirmation dialog and selection count.
+  - Integrated into Leads page toolbar.
+- **[2026-01-28]** Resolved **Table Interactivity & Alignment**:
+  - Standardized selection column width and centered checkboxes for perfect vertical alignment.
+  - Expanded checkbox hit areas to cover the entire selection column cell for easier interaction.
+  - Refactored selection to be fully controlled by parent `selectedIds` state, resolving a race condition.
+  - Implemented `hasMounted` hydration guard for consistent client/server rendering.
+  - Consolidated responsive column defaults in `LeadsPage`.
+  - Optimized event propagation to prevent side panel from opening when clicking checkboxes (using `target.closest('[data-slot="checkbox"]')`).
+  - Added `pl-4` padding to the selection column for better visual spacing.
 - **[2026-01-28]** Implemented **Table Layout Persistence**: Column widths, ordering, and visibility are now saved in `localStorage` and maintained across sessions.
 - **[2026-01-28]** Implemented **Search by Query**: Global leads search now includes the original scraping query (`input_id`). Updated the search placeholder for better user guidance.
 - **[2026-01-28]** Implemented **Global Glass Scrollbars**: The premium "Glass" aesthetic is now applied automatically to Every scrollable element in the application for a cohesive UI.
@@ -11,35 +24,13 @@
 - **[2026-01-28]** Fixed **Category Search Focus**: Resolved an issue where focus was lost while typing in the category filter search box.
 - **[2026-01-28]** Implemented **Searchable Category Filter**: Added a search box to the category dropdown with real-time filtering and automatic reset.
 - **[2026-01-28]** Refined **Filter Section UI**: Renamed range labels to "Star rating" and "Number of reviews", removed helper text, and added a **Star icon** to the rating section.
-- **[2026-01-28]** Optimized **Filter UI Columns**: Moved Rating and Reviews ranges to a side-by-side layout.
-- **[2026-01-28]** Implemented **Review Count Range Filter**: Added min/max review count filtering to frontend and backend.
-- **[2026-01-28]** Overhauled **Filter UI**: Moved Web Presence to top and organized filters with section headers (Quality, Contact, Media).
-- **[2026-01-28]** Added **"No Reviews" Filter**: Enabling targeting of leads with 0 reviews.
-- **[2026-01-28]** Implemented **Website Type Filter** (Option A): Replaced website toggles with a dropdown for Proper Site, Social Only, and No Website.
-- **[2026-01-28]** Implemented Social Media Icons (Facebook, Instagram, Twitter) in the Website column and enhanced search logic to include non-empty website URLs.
-- **[2026-01-28]** Added Copy Buttons to Name, Category, Query, and Location columns.
-- **[2026-01-28]** Refined Location column display (Semibold Title / Street Subtitle) and added Copy Button.
-- **[2026-01-28]** Fixed Table scrolling and sticky headers by resolving nested overflow conflicts and flex hierarchy in `page.tsx`.
-- **[2026-01-28]** Refined UI Density: Reduced vertical spacing and synchronized typography colors for a cleaner, more industrial look.
-- **[2026-01-27]** Implemented Dynamic Column Reordering (DND + Keyboard menu sync) with refined 4px spacing and right-aligned sorting icons.
-- **[2026-01-27]** Implemented Server-Side Sorting for Leads Table (Name, Category, Rating, Query).
-- **[2026-01-27]** Implemented Category Column & Filter dropdown with counts.
-- **[2026-01-27]** Enabled text wrapping in Leads Table cells and updated terminology to "results".
-- **[2026-01-27]** Fixed Leads Table scrolling issue by enabling internal vertical overflow and implementing sticky headers.
-- **[2026-01-27]** Refined Leads UI by removing redundant header and moving lead count to the filter bar.
-- **[2026-01-27]** Consolidated Leads toolbar: Lifted column visibility state and moved 'Columns' selector to the main filter bar.
-- **[2026-01-27]** Implemented Laptop/Desktop Responsiveness: Root layout refactor, responsive side-panel/overlay toggle.
-- **[2026-01-27]** Added "Website" column to Leads Table with truncated links.
 - **[2026-01-27]** Implemented CRM status and Notes feed.
 
-## Current Focus
-- Completed **Filter Section UI Overhaul**: Searchable categories, accent-insensitive search, and premium glass scrollbars.
-- Completed **Resend Job**: Duplication logic for failed/completed scraping tasks.
-
 ## Next Steps
-1. **Stability Testing**: Run a production-like job to verify the fix for the `exit-on-inactivity` flag and the general sync reliability.
-2. **Review Feedback**: Confirm with user if the global "Glass" scrollbar aesthetic meets their preference for the entire application.
+1. **Stability Testing**: Run a production-like job to verify scraper sync reliability.
+2. **Batch Operations**: Explore further bulk actions (e.g., bulk status update).
 
 ## Session Notes
-- Pivot: User requested to prioritize stability, search/filtering correctness, and verifying existing features over adding new CRM capabilities.
-- "Review Field Casing" is preserved as a high-priority bug content.
+- Resolved a critical race condition where `LeadsTable` internal selection state was being reset by the parent's initial empty state before synchronization could occur.
+- Moving to a fully controlled pattern fixed the issue and simplified the code.
+- Hydration mismatch resolved with a mount guard, ensuring stable event listener attachment.

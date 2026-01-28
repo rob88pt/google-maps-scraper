@@ -1,4 +1,28 @@
 # Changelog
+
+## [2026-01-28] - Bulk Delete & Table Interactivity Refinements
+
+### Added
+- **Bulk Delete Leads**:
+  - Implemented `DELETE /api/leads` endpoint for multi-ID deletion.
+  - Created `useDeleteLeads` hook with TanStack Query invalidation for real-time UI refresh.
+  - Developed `DeleteLeadsButton` with confirmation dialog, selection count, and destructive styling.
+  - Integrated delete functionality into the Leads page toolbar, conditionally visible on selection.
+- **Table Interactivity Fixes**:
+  - Optimized `TableRow` click handler to ignore clicks on interactive elements (buttons, links, checkboxes) using `target.closest()`, preventing the side panel from activating unintentionally.
+  - Added `pl-4` padding to the selection column in `LeadsTable` for improved visual spacing and hit area.
+  - Switched table row identification to use unique lead IDs (`getRowId`) to ensure selection state persists correctly after data mutations.
+
+### Fixed
+- **Row Selection Sync**: Resolved issue where selection state could become inconsistent after bulk actions by implementing reactive synchronization between internal table state and parent selection state.
+
+### Files Affected
+- `leads-command-center/src/app/api/leads/route.ts`
+- `leads-command-center/src/lib/hooks/use-leads.ts`
+- `leads-command-center/src/components/leads/delete-leads-button.tsx` (NEW)
+- `leads-command-center/src/components/leads/leads-table.tsx`
+- `leads-command-center/src/app/leads/page.tsx`
+
 2: 
 3: ## [2026-01-28] - Table Layout Persistence
 4: 

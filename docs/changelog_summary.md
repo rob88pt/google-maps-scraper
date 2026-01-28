@@ -3,6 +3,7 @@
 For the full history and technical granularities, see the [Full Changelog](changelog.md).
 
 ## Major Milestones
+  - **2026-01-28** [Bulk Delete & Table Interactivity](changelog.md#2026-01-28---bulk-delete--table-interactivity-refinements) (Multi-ID selection, delete UI, row click propagation fixes)
   - **2026-01-28** [Review Count Filter & UI Overhaul](changelog.md#2026-01-28---filter-ui-overhaul--no-reviews-filter) (Min/Max ranges, No Reviews toggle, Social Icons, 2-column refinements)
   - **2026-01-28** [Table Copy Buttons & Layout Polish](changelog.md#2026-01-28---table-copy-buttons) (Hover copy buttons, Location refinement, Spacing)
  - **2026-01-27** [Scraper Documentation Alignment](changelog.md#2026-01-27---scraper-documentation-alignment) (Cleaned strategy & reverted code)
@@ -44,7 +45,10 @@ For the full history and technical granularities, see the [Full Changelog](chang
 - **Global Glass Scrollbars**: Applied a custom, premium translucent scrollbar style across the entire app.
 - **Docker Fix**: Automatically normalizes `-exit-on-inactivity` numbers (e.g., 1 -> 1m).
 - **Category Search**: Added accent-insensitive, real-time search with focused state persistence.
-- Next: Implement real-time lead status updates on the Map view.
+- **Bulk Delete**: Multi-lead deletion integrated with confirmation UI.
+- **Table Interactivity**: Refined row identification and event propagation.
+- **Hydration Mismatch**: Investigating persistent React error blocking browser checkboxes.
+- Next: Move Bulk Delete from "Done" (logic-verified) to "Verified" (browser-verified) once hydration is fixed.
 
 ## Recent Fixes
 - **Job Configuration**: Added dialog to view parameters and save as preset from existing jobs
