@@ -40,6 +40,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useMediaQuery } from '@/lib/hooks/use-media-query'
 import type { Lead } from '@/lib/supabase/types'
+import { LazyImage } from './lazy-image'
 
 // Extended Lead type with row metadata
 export type LeadRow = Lead & { id: number; created_at: string }
@@ -228,10 +229,10 @@ export const columns: ColumnDef<LeadRow>[] = [
         cell: ({ row }) => {
             const thumbnail = row.getValue('thumbnail') as string
             return thumbnail ? (
-                <img
+                <LazyImage
                     src={thumbnail}
                     alt=""
-                    className="w-10 h-10 rounded-md object-cover bg-slate-800"
+                    className="w-10 h-10 rounded-md"
                 />
             ) : (
                 <div className="w-10 h-10 rounded-md bg-slate-800 flex items-center justify-center">

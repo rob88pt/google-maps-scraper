@@ -259,7 +259,7 @@ export default function LeadsPage() {
                                         disabled={selectedIds.size === 0}
                                     >
                                         <Download className="h-4 w-4" />
-                                        Export {selectedIds.size > 0 && `(${selectedIds.size})`}
+                                        {selectedIds.size > 0 && `(${selectedIds.size})`}
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700">

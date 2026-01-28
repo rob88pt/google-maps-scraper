@@ -39,6 +39,7 @@ import {
 import { toast } from 'sonner'
 import type { Lead } from '@/lib/supabase/types'
 import { useLeadNotes, useLeadStatus } from '@/lib/hooks/use-leads'
+import { LazyImage } from './lazy-image'
 
 export type LeadRow = Lead & { id: number; created_at: string }
 
@@ -128,10 +129,11 @@ function ImageGallery({ images }: { images: Lead['images'] }) {
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogTrigger asChild>
                     <div className="aspect-video rounded-lg overflow-hidden bg-slate-800 cursor-zoom-in group/image">
-                        <img
+                        <LazyImage
                             src={images[currentIndex]?.image}
                             alt={images[currentIndex]?.title || 'Business image'}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover/image:scale-105"
+                            className="w-full h-full"
+                            imgClassName="transition-transform duration-300 group-hover/image:scale-105"
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-colors" />
                     </div>
@@ -140,10 +142,11 @@ function ImageGallery({ images }: { images: Lead['images'] }) {
                     <DialogTitle className="sr-only">Image Preview</DialogTitle>
 
                     <div className="relative flex items-center justify-center w-full h-full group/preview">
-                        <img
+                        <LazyImage
                             src={getHighResUrl(images[currentIndex]?.image)}
                             alt={images[currentIndex]?.title || 'Business image'}
-                            className="max-w-full max-h-[90vh] object-contain rounded-md"
+                            className="max-w-full max-h-[90vh] rounded-md"
+                            imgClassName="object-contain"
                         />
 
                         {images.length > 1 && (
@@ -366,20 +369,22 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                             <Dialog>
                                 <DialogTrigger asChild>
                                     <div className="aspect-video rounded-lg overflow-hidden bg-slate-800 cursor-zoom-in group/image">
-                                        <img
+                                        <LazyImage
                                             src={lead.thumbnail}
                                             alt={lead.title}
-                                            className="w-full h-full object-cover transition-transform duration-300 group-hover/image:scale-105"
+                                            className="w-full h-full"
+                                            imgClassName="transition-transform duration-300 group-hover/image:scale-105"
                                         />
                                         <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-colors" />
                                     </div>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
                                     <DialogTitle className="sr-only">Image Preview</DialogTitle>
-                                    <img
+                                    <LazyImage
                                         src={getHighResUrl(lead.thumbnail)}
                                         alt={lead.title}
-                                        className="max-w-full max-h-[90vh] object-contain rounded-md"
+                                        className="max-w-full max-h-[90vh] rounded-md"
+                                        imgClassName="object-contain"
                                     />
                                 </DialogContent>
                             </Dialog>
@@ -603,7 +608,11 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         {review.ProfilePicture && (
-                                                            <img src={review.ProfilePicture} alt="" className="w-6 h-6 rounded-full" />
+                                                            <LazyImage
+                                                                src={review.ProfilePicture}
+                                                                alt=""
+                                                                className="w-6 h-6 rounded-full"
+                                                            />
                                                         )}
                                                         <span className="text-sm font-medium text-white">{review.Name}</span>
                                                     </div>
@@ -620,18 +629,21 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                                                         {review.Images.slice(0, 3).map((img, idx) => (
                                                             <Dialog key={idx}>
                                                                 <DialogTrigger asChild>
-                                                                    <img
-                                                                        src={img}
-                                                                        alt=""
-                                                                        className="w-16 h-16 object-cover rounded cursor-zoom-in"
-                                                                    />
+                                                                    <div className="w-16 h-16 rounded cursor-zoom-in overflow-hidden">
+                                                                        <LazyImage
+                                                                            src={img}
+                                                                            alt=""
+                                                                            className="w-full h-full"
+                                                                        />
+                                                                    </div>
                                                                 </DialogTrigger>
                                                                 <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
                                                                     <DialogTitle className="sr-only">Review Image Preview</DialogTitle>
-                                                                    <img
+                                                                    <LazyImage
                                                                         src={getHighResUrl(img)}
                                                                         alt=""
-                                                                        className="max-w-full max-h-[90vh] object-contain rounded-md"
+                                                                        className="max-w-full max-h-[90vh] rounded-md"
+                                                                        imgClassName="object-contain"
                                                                     />
                                                                 </DialogContent>
                                                             </Dialog>
@@ -646,7 +658,11 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         {review.ProfilePicture && (
-                                                            <img src={review.ProfilePicture} alt="" className="w-6 h-6 rounded-full" />
+                                                            <LazyImage
+                                                                src={review.ProfilePicture}
+                                                                alt=""
+                                                                className="w-6 h-6 rounded-full"
+                                                            />
                                                         )}
                                                         <span className="text-sm font-medium text-white">{review.Name}</span>
                                                     </div>

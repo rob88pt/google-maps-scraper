@@ -1,6 +1,7 @@
 # Active Context
 
 ## Recent Changes
+- **[2026-01-28]** **Toolbar UI Optimization**: Removed text labels from "Delete" and "Export" buttons to save horizontal space. Buttons now display icons and selection counts only (e.g., `[Icon] (1)`).
 - **[2026-01-28]** Implemented **Bulk Delete Leads**:
   - Added `DELETE /api/leads` endpoint for multi-ID deletion.
   - Created `useDeleteLeads` hook with query invalidation.

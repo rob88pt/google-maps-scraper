@@ -50,7 +50,7 @@ export function DeleteLeadsButton({ selectedIds, onSuccess }: DeleteLeadsButtonP
                     className="gap-2 border-red-900/50 hover:bg-red-900/20 text-red-400 hover:text-red-300 bg-transparent"
                 >
                     <Trash2 className="h-4 w-4" />
-                    Delete {selectedIds.size > 0 && `(${selectedIds.size})`}
+                    {selectedIds.size > 0 && `(${selectedIds.size})`}
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="bg-slate-900 border-slate-800 text-slate-200">

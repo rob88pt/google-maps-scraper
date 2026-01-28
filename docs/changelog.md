@@ -16,10 +16,13 @@
 ### Fixed
 - **Row Selection Sync**: Resolved issue where selection state could become inconsistent after bulk actions by implementing reactive synchronization between internal table state and parent selection state.
 
+### Changed
+- **Toolbar UI Optimization**: Removed text labels ("Delete", "Export") from action buttons in the Leads table toolbar. The buttons now display icons and selection counts only, significantly reducing horizontal space requirements on smaller screens.
+
 ### Files Affected
 - `leads-command-center/src/app/api/leads/route.ts`
 - `leads-command-center/src/lib/hooks/use-leads.ts`
-- `leads-command-center/src/components/leads/delete-leads-button.tsx` (NEW)
+- `leads-command-center/src/components/leads/delete-leads-button.tsx`
 - `leads-command-center/src/components/leads/leads-table.tsx`
 - `leads-command-center/src/app/leads/page.tsx`
 
