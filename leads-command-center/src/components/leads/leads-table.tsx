@@ -12,7 +12,8 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone, GripVertical } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone, GripVertical, Check } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
@@ -125,6 +126,35 @@ function RatingDisplay({ rating, count }: { rating: number; count: number }) {
     )
 }
 
+// Cell Copy Button component
+function CellCopyButton({ text, label }: { text: string; label: string }) {
+    const [copied, setCopied] = React.useState(false)
+
+    const handleCopy = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        navigator.clipboard.writeText(text)
+        setCopied(true)
+        toast.success(`${label} copied to clipboard`)
+        setTimeout(() => setCopied(false), 2000)
+    }
+
+    return (
+        <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ml-1 shrink-0"
+            onClick={handleCopy}
+            title={`Copy ${label}`}
+        >
+            {copied ? (
+                <Check className="h-3 w-3 text-green-500" />
+            ) : (
+                <Copy className="h-3 w-3 text-slate-500" />
+            )}
+        </Button>
+    )
+}
+
 // Column definitions
 export const columns: ColumnDef<LeadRow>[] = [
     {
@@ -178,8 +208,9 @@ export const columns: ColumnDef<LeadRow>[] = [
         accessorKey: 'title',
         header: 'Name',
         cell: ({ row }) => (
-            <div className="font-medium text-white whitespace-normal break-words">
-                {row.getValue('title')}
+            <div className="font-medium text-white whitespace-normal break-words flex items-center group">
+                <span className="flex-1">{row.getValue('title')}</span>
+                <CellCopyButton text={row.getValue('title')} label="Name" />
             </div>
         ),
         size: 250,
@@ -198,11 +229,15 @@ export const columns: ColumnDef<LeadRow>[] = [
     {
         accessorKey: 'category',
         header: 'Category',
-        cell: ({ row }) => (
-            <div className="text-sm text-slate-300 whitespace-normal break-words">
-                {row.getValue('category') || '—'}
-            </div>
-        ),
+        cell: ({ row }) => {
+            const category = row.getValue('category') as string || '—'
+            return (
+                <div className="text-sm text-slate-300 whitespace-normal break-words flex items-center group">
+                    <span className="flex-1">{category}</span>
+                    {category !== '—' && <CellCopyButton text={category} label="Category" />}
+                </div>
+            )
+        },
         size: 180,
     },
     {
@@ -255,11 +290,38 @@ export const columns: ColumnDef<LeadRow>[] = [
         header: 'Location',
         cell: ({ row }) => {
             const addr = row.original.complete_address
-            const city = addr?.city || ''
-            const state = addr?.state || ''
+            const fullAddress = row.original.address
+            if (!fullAddress) return <span className="text-slate-600">—</span>
+
+            const city = addr?.city
+            const state = addr?.state
+
+            // Construct secondary line from components, excluding city/state to avoid redundancy
+            const secondaryLine = [
+                addr?.street,
+                addr?.borough,
+                addr?.postal_code
+            ].filter(Boolean).join(', ')
+
             return (
-                <div className="text-sm text-slate-300 whitespace-normal break-words">
-                    {city}{city && state ? ', ' : ''}{state}
+                <div className="text-sm text-slate-300 whitespace-normal break-words flex items-center group">
+                    <div className="flex-1">
+                        {(city || state) ? (
+                            <>
+                                <span className="font-semibold text-slate-200">
+                                    {city}{city && state ? ', ' : ''}{state}
+                                </span>
+                                {secondaryLine && (
+                                    <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
+                                        {secondaryLine}
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            fullAddress
+                        )}
+                    </div>
+                    <CellCopyButton text={fullAddress} label="Location" />
                 </div>
             )
         },
@@ -276,11 +338,15 @@ export const columns: ColumnDef<LeadRow>[] = [
         id: 'input_id',
         accessorKey: 'input_id',
         header: 'Query',
-        cell: ({ row }) => (
-            <div className="text-sm text-slate-400">
-                {row.getValue('input_id')}
-            </div>
-        ),
+        cell: ({ row }) => {
+            const query = row.getValue('input_id') as string
+            return (
+                <div className="text-sm text-slate-400 flex items-center group">
+                    <span className="flex-1 truncate">{query}</span>
+                    <CellCopyButton text={query} label="Query" />
+                </div>
+            )
+        },
         size: 150,
     },
     {
@@ -514,7 +580,7 @@ export function LeadsTable({
                                     return (
                                         <TableHead
                                             key={header.id}
-                                            className={`text-slate-400 relative group/header bg-slate-900 z-10 px-1 ${isDragging ? 'select-none' : ''}`}
+                                            className={`text-slate-400 relative group/header bg-slate-900 z-20 px-1 sticky top-0 ${isDragging ? 'select-none' : ''}`}
                                             style={{ width: header.getSize() }}
                                             onDragOver={(e) => isReorderable && onDragOver(e, header.id)}
                                             onDrop={(e) => isReorderable && onDrop(e, header.id)}

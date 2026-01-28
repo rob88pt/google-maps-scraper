@@ -1,6 +1,10 @@
 # Task List
 
 ## ✅ Done
+- [x] Fix Location column to show full address (2026-01-28)
+- [x] Implement Copy Buttons for Name, Category, and Query columns (2026-01-28)
+- [x] Fix Leads Table scrolling and sticky headers (2026-01-28)
+- [x] Refine UI Density & Spacing (Search bar, Pagination) (2026-01-28)
 - [x] Implement Dynamic Column Reordering (DND + Keyboard) (2026-01-27)
 - [x] Implement Server-Side Sorting for Leads Table (2026-01-27)
 

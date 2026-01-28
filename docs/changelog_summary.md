@@ -3,6 +3,7 @@
 For the full history and technical granularities, see the [Full Changelog](changelog.md).
 
 ## Major Milestones
+ - **2026-01-28** [Table Copy Buttons & Layout Polish](changelog.md#2026-01-28---table-copy-buttons) (Hover copy buttons, Location refinement, Spacing)
  - **2026-01-27** [Scraper Documentation Alignment](changelog.md#2026-01-27---scraper-documentation-alignment) (Cleaned strategy & reverted code)
  - **2026-01-24** [Filtering Fixes & Image Investigation](changelog.md#2026-01-24---filtering-fixes--image-investigation) (City search, hasPhotos, email null handling)
  - **2026-01-24** [Review Display & Scraper Fixes](changelog.md#2026-01-24---review-display--scraper-fixes) (Panic fix + PascalCase sync)

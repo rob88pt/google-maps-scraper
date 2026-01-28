@@ -145,9 +145,9 @@ export default function LeadsPage() {
 
             <main className="flex-1 flex overflow-hidden">
                 {/* Main content area */}
-                <div className={`flex-1 flex flex-col p-6 min-w-0 ${selectedLead && isDesktop ? 'pr-0' : ''}`}>
+                <div className={`flex-1 flex flex-col p-4 pt-2 pb-2 min-w-0 ${selectedLead && isDesktop ? 'pr-0' : ''}`}>
                     {/* Search and filter bar */}
-                    <div className="flex items-center gap-4 mb-6">
+                    <div className="flex items-center gap-4 mb-2">
                         <div className="relative flex-1 max-w-md">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
@@ -280,7 +280,7 @@ export default function LeadsPage() {
                     )}
 
                     {/* Leads table */}
-                    <div className="flex-1 overflow-auto min-h-0">
+                    <div className="flex-1 flex flex-col min-h-0">
                         <LeadsTable
                             data={data?.leads ?? []}
                             isLoading={isLoading}
@@ -301,8 +301,8 @@ export default function LeadsPage() {
 
                     {/* Pagination */}
                     {data && data.total > data.pageSize && (
-                        <div className="flex items-center justify-between pt-4 border-t border-slate-800 mt-4">
-                            <p className="text-sm text-slate-500">
+                        <div className="flex items-center justify-between pt-2">
+                            <p className="text-sm text-slate-400">
                                 Page {data.page} of {Math.ceil(data.total / data.pageSize)}
                             </p>
                             <div className="flex gap-2">

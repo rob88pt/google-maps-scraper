@@ -1,5 +1,24 @@
 # Changelog
 
+## [2026-01-28] - Table Copy Buttons
+
+### Added
+- **Row Copy Buttons**: 
+    - Implemented subtle hover-triggered copy buttons for Name, Category, and Query columns.
+    - Integrated `sonner` for real-time visual feedback (toast notifications).
+    - Added temporary visual state (checkmark) on the copy button itself after successful copy.
+- **Logic**: Used `e.stopPropagation()` to prevent copy actions from triggering the lead detail panel.
+
+### Fixed
+- **Sticky Table Headers**: Resolved issue where headers would not stay pinned during scroll by removing redundant nested `overflow` containers.
+- **Table Layout & Scrolling**: Resolved issue where headers were not sticky and pagination buttons overlapped by removing redundant nested overflows and fixing the flex-direction in `page.tsx`.
+- **UI Density**: 
+    - Reduced vertical padding and margins around the search bar and pagination for a more compact design.
+    - Synchronized text colors between results count and pagination info (Standardized to `text-slate-400`).
+
+### Files Affected
+- `leads-command-center/src/components/leads/leads-table.tsx`
+
 ## [2026-01-27] - Dynamic Column Reordering
 
 ### Added
