@@ -41,6 +41,8 @@ export async function GET(request: NextRequest) {
         const hasPhotos = searchParams.get('hasPhotos') === 'true'
         const hasReviews = searchParams.get('hasReviews') === 'true'
         const noReviews = searchParams.get('noReviews') === 'true'
+        const minReviewCount = searchParams.get('minReviewCount') ? parseInt(searchParams.get('minReviewCount')!) : null
+        const maxReviewCount = searchParams.get('maxReviewCount') ? parseInt(searchParams.get('maxReviewCount')!) : null
         const category = searchParams.get('category')?.trim() || ''
         const sortBy = searchParams.get('sortBy') || 'created_at'
         const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc'
@@ -96,6 +98,14 @@ export async function GET(request: NextRequest) {
         // No reviews filter
         if (noReviews) {
             query = query.or('data->review_count.eq.0,data->review_count.is.null')
+        }
+
+        // Review Count Range Filter
+        if (minReviewCount !== null) {
+            query = query.gte('data->review_count', minReviewCount)
+        }
+        if (maxReviewCount !== null) {
+            query = query.lte('data->review_count', maxReviewCount)
         }
 
         // Does not have email filter

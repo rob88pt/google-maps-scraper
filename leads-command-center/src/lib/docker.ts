@@ -227,7 +227,13 @@ function buildDockerArgs(params: ScraperJobParams, containerName: string): strin
 
     // Exit on inactivity
     if (params.exitOnInactivity) {
-        args.push('-exit-on-inactivity', params.exitOnInactivity)
+        let val = params.exitOnInactivity.trim()
+        // If it's just a number, append 'm' (minutes) as a safe default
+        // The scraper flag is a duration (e.g. '5m', '30s')
+        if (/^\d+$/.test(val)) {
+            val += 'm'
+        }
+        args.push('-exit-on-inactivity', val)
     }
 
     // Debug mode (shows browser)

@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { Save, Copy, Check, Info } from "lucide-react"
+import { Save, Copy, Check, Info, RefreshCw } from "lucide-react"
 import { toast } from 'sonner'
 import { useCreatePreset } from '@/lib/hooks/use-presets'
 import type { Job } from '@/lib/supabase/types'
@@ -24,15 +24,30 @@ interface JobConfigDialogProps {
     job: Job | null
     open: boolean
     onOpenChange: (open: boolean) => void
+    onResend?: (job: Job) => Promise<void>
 }
 
-export function JobConfigDialog({ job, open, onOpenChange }: JobConfigDialogProps) {
+export function JobConfigDialog({ job, open, onOpenChange, onResend }: JobConfigDialogProps) {
     const [isSavingPreset, setIsSavingPreset] = useState(false)
+    const [isResending, setIsResending] = useState(false)
     const [presetName, setPresetName] = useState('')
     const [copied, setCopied] = useState(false)
     const createPreset = useCreatePreset()
 
     if (!job) return null
+
+    const handleResend = async () => {
+        if (!onResend || !job) return
+        setIsResending(true)
+        try {
+            await onResend(job)
+            onOpenChange(false)
+        } catch (error) {
+            // Error handling is managed in onResend
+        } finally {
+            setIsResending(false)
+        }
+    }
 
     const handleCopyQueries = () => {
         const queryText = job.queries.join('\n')
@@ -41,6 +56,7 @@ export function JobConfigDialog({ job, open, onOpenChange }: JobConfigDialogProp
         toast.success('Queries copied to clipboard')
         setTimeout(() => setCopied(false), 2000)
     }
+    // ... [rest of the component structure with the button] ...
 
     const handleSaveAsPreset = async () => {
         if (!presetName.trim()) {
@@ -79,7 +95,7 @@ export function JobConfigDialog({ job, open, onOpenChange }: JobConfigDialogProp
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md bg-slate-950 border-slate-800 text-slate-200">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto glass-scrollbar bg-slate-950 border-slate-800 text-slate-200">
                 <DialogHeader>
                     <DialogTitle className="text-white flex items-center gap-2">
                         <Info className="h-5 w-5 text-blue-500" />
@@ -130,6 +146,17 @@ export function JobConfigDialog({ job, open, onOpenChange }: JobConfigDialogProp
                         <ParamItem label="Zoom Level" value={job.params.zoom} />
                         <ParamItem label="Radius" value={`${job.params.radius}km`} />
                     </div>
+
+                    {onResend && (
+                        <Button
+                            className="w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white mb-2"
+                            onClick={handleResend}
+                            disabled={isResending}
+                        >
+                            <RefreshCw className={`h-4 w-4 ${isResending ? 'animate-spin' : ''}`} />
+                            {isResending ? 'Resending...' : 'Resend This Job'}
+                        </Button>
+                    )}
 
                     {isSavingPreset ? (
                         <div className="space-y-4 pt-4 border-t border-slate-800">

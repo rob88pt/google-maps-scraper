@@ -63,6 +63,8 @@ export default function LeadsPage() {
         hasPhotos: filters.hasPhotos || undefined,
         hasReviews: filters.hasReviews || undefined,
         noReviews: filters.noReviews || undefined,
+        minReviewCount: filters.minReviewCount,
+        maxReviewCount: filters.maxReviewCount,
         category: selectedCategory || undefined,
         sortBy: sorting[0]?.id as any || 'created_at',
         sortOrder: sorting[0]?.desc ? 'desc' : 'asc',

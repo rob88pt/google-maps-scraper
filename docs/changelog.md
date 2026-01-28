@@ -3,6 +3,8 @@
 ## [2026-01-28] - Filter UI Overhaul & "No Reviews" Filter
 
 ### Added
+- **Side-by-Side Range Filters**: Reorganized Rating and Reviews range filters into a two-column grid to optimize vertical space in the filter menu.
+- **Review Count Range Filter**: Added "Min" and "Max" inputs to the filter menu to allow specific targeting of leads based on review volume.
 - **Filter UI Reorganization**: 
     - Moved **Web Presence** (Website Type) to the top of the filter menu as the highest priority filter.
     - Organized all filters into logical groups with uppercase subtitles (Web Presence, Quality & Reviews, Contact Setup, Assets).

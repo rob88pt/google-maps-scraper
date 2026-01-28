@@ -600,7 +600,7 @@ export function JobForm({ onSubmit, isSubmitting = false }: JobFormProps) {
                                 <Label htmlFor="exitOnInactivity" className="cursor-help">Exit on Inactivity</Label>
                             </TooltipTrigger>
                             <TooltipContent side="right">
-                                Stop the job if no new data is found for this long (e.g., 3m). Prevents jobs from hanging forever.
+                                Stop the job if no new data is found for this long. Use Go duration format: '3m' (minutes), '30s' (seconds), '1h' (hours).
                             </TooltipContent>
                         </Tooltip>
                         <Input

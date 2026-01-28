@@ -3,7 +3,8 @@
 For the full history and technical granularities, see the [Full Changelog](changelog.md).
 
 ## Major Milestones
- - **2026-01-28** [Table Copy Buttons & Layout Polish](changelog.md#2026-01-28---table-copy-buttons) (Hover copy buttons, Location refinement, Spacing)
+  - **2026-01-28** [Review Count Filter & UI Overhaul](changelog.md#2026-01-28---filter-ui-overhaul--no-reviews-filter) (Min/Max ranges, No Reviews toggle, Social Icons, 2-column refinements)
+  - **2026-01-28** [Table Copy Buttons & Layout Polish](changelog.md#2026-01-28---table-copy-buttons) (Hover copy buttons, Location refinement, Spacing)
  - **2026-01-27** [Scraper Documentation Alignment](changelog.md#2026-01-27---scraper-documentation-alignment) (Cleaned strategy & reverted code)
  - **2026-01-24** [Filtering Fixes & Image Investigation](changelog.md#2026-01-24---filtering-fixes--image-investigation) (City search, hasPhotos, email null handling)
  - **2026-01-24** [Review Display & Scraper Fixes](changelog.md#2026-01-24---review-display--scraper-fixes) (Panic fix + PascalCase sync)
@@ -34,8 +35,16 @@ For the full history and technical granularities, see the [Full Changelog](chang
 - **Accessibility** improved with high-contrast action buttons
 - **Scraper Panic Fixed**: Resolved nil map panic in `reviews.go`
 - **Frontend Sync Fixed**: Handled PascalCase JSON keys for reviews
-- **Filtering Logic Fixed**: Corrected JSONB paths and null handling for leads list
-- Next: Filter out "Report this photo" links in scraper; Investigate broken thumbnails on page 2.
+- **Review Count Filter**: Implemented min/max range filtering for reviews (API + UI).
+- **Filter UI Reorganization**: Moved Web Presence (Website Type) to top priority and added section subtitles.
+- **Filter UI Refinement**: Optimized Rating/Reviews ranges into a symmetric 2-column grid with accessible helper text.
+- **No Reviews Filter**: Added dedicated toggle for leads with 0 reviews.
+- **Social Media Icons**: Detected and displayed FB/IG/X icons in website column.
+- **Resend Job**: Users can now duplicate and rerun existing jobs from the UI.
+- **Global Glass Scrollbars**: Applied a custom, premium translucent scrollbar style across the entire app.
+- **Docker Fix**: Automatically normalizes `-exit-on-inactivity` numbers (e.g., 1 -> 1m).
+- **Category Search**: Added accent-insensitive, real-time search with focused state persistence.
+- Next: Implement real-time lead status updates on the Map view.
 
 ## Recent Fixes
 - **Job Configuration**: Added dialog to view parameters and save as preset from existing jobs

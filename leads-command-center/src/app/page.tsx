@@ -98,6 +98,33 @@ export default function JobsPage() {
     setConfigDialog({ open: true, job })
   }
 
+  const handleResendJob = async (job: Job) => {
+    try {
+      const values: JobFormValues = {
+        queries: job.queries.join('\n'),
+        depth: job.params.depth,
+        concurrency: job.params.concurrency,
+        outputJson: true,
+        extractEmail: job.params.email,
+        extraReviews: job.params.extraReviews,
+        lang: job.params.lang,
+        geo: job.params.geo,
+        zoom: job.params.zoom,
+        radius: job.params.radius,
+        proxies: job.params.proxies?.join('\n') || '',
+        fastMode: job.params.fastMode,
+        exitOnInactivity: job.params.exitOnInactivity,
+        debug: job.params.debug,
+      }
+
+      const result = await createJob.mutateAsync(values)
+      toast.success(`Job resent! Scraping ${result.queryCount} queries...`)
+      setConfigDialog({ open: false, job: null })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to resend job')
+    }
+  }
+
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
       <AppHeader />
@@ -196,7 +223,7 @@ export default function JobsPage() {
                           </span>
 
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
@@ -204,7 +231,10 @@ export default function JobsPage() {
                             <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700">
                               {canCancel && (
                                 <DropdownMenuItem
-                                  onClick={() => handleCancelJob(job.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleCancelJob(job.id)
+                                  }}
                                   className="text-yellow-500 focus:text-yellow-500"
                                 >
                                   <StopCircle className="h-4 w-4 mr-2" />
@@ -268,6 +298,7 @@ export default function JobsPage() {
         job={configDialog.job}
         open={configDialog.open}
         onOpenChange={(open) => setConfigDialog({ ...configDialog, open })}
+        onResend={handleResendJob}
       />
     </div>
   )

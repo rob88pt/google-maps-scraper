@@ -23,6 +23,8 @@ export interface LeadsFilters {
     hasPhotos: boolean
     hasReviews: boolean
     noReviews: boolean
+    minReviewCount: number | undefined
+    maxReviewCount: number | undefined
 }
 
 interface LeadsFiltersProps {
@@ -39,6 +41,8 @@ const defaultFilters: LeadsFilters = {
     hasPhotos: false,
     hasReviews: false,
     noReviews: false,
+    minReviewCount: undefined,
+    maxReviewCount: undefined,
 }
 
 export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
@@ -53,6 +57,8 @@ export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
         filters.hasPhotos,
         filters.hasReviews,
         filters.noReviews,
+        filters.minReviewCount !== undefined,
+        filters.maxReviewCount !== undefined,
     ].filter(Boolean).length
 
     const handleReset = () => {
@@ -142,11 +148,13 @@ export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
                                 <Separator className="flex-1 bg-slate-800" />
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="text-xs text-slate-400">Rating Range</Label>
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-1.5 flex-1">
-                                        <Star className="h-3.5 w-3.5 text-yellow-500/80" />
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                        <Label className="text-xs text-slate-400">Star rating</Label>
+                                        <Star className="h-3 w-3 text-yellow-500/70" />
+                                    </div>
+                                    <div className="flex items-center gap-1.5 pt-0.5">
                                         <Input
                                             type="number"
                                             min={0}
@@ -154,19 +162,50 @@ export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
                                             step={0.5}
                                             value={filters.minRating}
                                             onChange={(e) => updateFilter('minRating', parseFloat(e.target.value) || 0)}
-                                            className="h-8 bg-slate-950 border-slate-800 text-xs text-slate-200"
+                                            className="h-8 bg-slate-950 border-slate-800 text-xs text-slate-200 px-2 w-14"
+                                            placeholder="0"
+                                            aria-label="Minimum star rating"
+                                        />
+                                        <span className="text-slate-700">-</span>
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            max={5}
+                                            step={0.5}
+                                            value={filters.maxRating}
+                                            onChange={(e) => updateFilter('maxRating', parseFloat(e.target.value) || 5)}
+                                            className="h-8 bg-slate-950 border-slate-800 text-xs text-slate-200 w-14 px-2"
+                                            placeholder="5"
+                                            aria-label="Maximum star rating"
                                         />
                                     </div>
-                                    <span className="text-slate-600 text-[10px]">TO</span>
-                                    <Input
-                                        type="number"
-                                        min={0}
-                                        max={5}
-                                        step={0.5}
-                                        value={filters.maxRating}
-                                        onChange={(e) => updateFilter('maxRating', parseFloat(e.target.value) || 5)}
-                                        className="h-8 bg-slate-950 border-slate-800 text-xs text-slate-200 flex-1"
-                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-xs text-slate-400">Number of reviews</Label>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 pt-0.5">
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            placeholder="0"
+                                            value={filters.minReviewCount ?? ''}
+                                            onChange={(e) => updateFilter('minReviewCount', e.target.value === '' ? undefined : parseInt(e.target.value))}
+                                            className="h-8 bg-slate-950 border-slate-800 text-xs text-slate-200 flex-1 px-2"
+                                            aria-label="Minimum number of reviews"
+                                        />
+                                        <span className="text-slate-700">-</span>
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            placeholder="50+"
+                                            value={filters.maxReviewCount ?? ''}
+                                            onChange={(e) => updateFilter('maxReviewCount', e.target.value === '' ? undefined : parseInt(e.target.value))}
+                                            className="h-8 bg-slate-950 border-slate-800 text-xs text-slate-200 flex-1 px-2"
+                                            aria-label="Maximum number of reviews"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 

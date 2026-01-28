@@ -1,6 +1,15 @@
 # Task List
 
 ## ✅ Done
+- [x] Implement Global "Glass" Scrollbars & Dialog scrolling (2026-01-28)
+- [x] Implement "Resend Job" (Duplicate Job) feature (2026-01-28)
+- [x] Fix Docker Inactivity Flag normalization (1 -> 1m) (2026-01-28)
+- [x] Refine Category Filter: Searchable, accent-insensitive, focus-stable (2026-01-28)
+- [x] Implement Review Count Range Filter (Min/Max) (2026-01-28)
+- [x] Overhaul Filter UI: Web Presence priority + Section headers (2026-01-28)
+- [x] Refine Range Inputs: Symmetric 2-column layout + Accessible subtitles (2026-01-28)
+- [x] Add "No Reviews" filter toggle (2026-01-28)
+- [x] Implement Social Media Icons (FB/IG/X) detection (2026-01-28)
 - [x] Fix Location column to show full address (2026-01-28)
 - [x] Implement Copy Buttons for Name, Category, and Query columns (2026-01-28)
 - [x] Fix Leads Table scrolling and sticky headers (2026-01-28)

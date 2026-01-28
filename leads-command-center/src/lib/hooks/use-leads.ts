@@ -14,6 +14,8 @@ export interface LeadsQueryOptions {
     hasPhotos?: boolean
     hasReviews?: boolean
     noReviews?: boolean
+    minReviewCount?: number
+    maxReviewCount?: number
     category?: string
     sortBy?: 'title' | 'review_rating' | 'review_count' | 'created_at' | 'category' | 'city' | 'input_id'
     sortOrder?: 'asc' | 'desc'
@@ -59,6 +61,8 @@ async function fetchLeads(options: LeadsQueryOptions): Promise<LeadsResponse> {
     if (options.hasPhotos) params.set('hasPhotos', 'true')
     if (options.hasReviews) params.set('hasReviews', 'true')
     if (options.noReviews) params.set('noReviews', 'true')
+    if (options.minReviewCount !== undefined) params.set('minReviewCount', options.minReviewCount.toString())
+    if (options.maxReviewCount !== undefined) params.set('maxReviewCount', options.maxReviewCount.toString())
     if (options.category) params.set('category', options.category)
     if (options.sortBy) params.set('sortBy', options.sortBy)
     if (options.sortOrder) params.set('sortOrder', options.sortOrder)
