@@ -1,5 +1,29 @@
 # Changelog
 
+## [2026-01-28] - Filter UI Overhaul & "No Reviews" Filter
+
+### Added
+- **Filter UI Reorganization**: 
+    - Moved **Web Presence** (Website Type) to the top of the filter menu as the highest priority filter.
+    - Organized all filters into logical groups with uppercase subtitles (Web Presence, Quality & Reviews, Contact Setup, Assets).
+    - Improved visual density and clarity with subtle separators.
+- **"No Reviews" Filter**: Added a specific toggle to find leads with zero reviews, complementing the existing "Has Reviews" logic.
+- **Improved Toggles**: Enhanced mutual exclusion for Email and Review toggles (checking one unchecks the other).
+
+## [2026-01-28] - Social Media Icons & Comprehensive Website Filtering
+
+### Added
+- **Website Type Filter**: 
+    - Replaced basic website checkboxes with a consolidated "Website Type" dropdown/select filter.
+    - Added dedicated filtering for "Proper Sites" (excluding social media), "Social Only" (FB/IG/X), and "No Website".
+- **Social Media Icons**: 
+    - Implemented platform-specific icons (Facebook, Instagram, Twitter) in the Website column.
+    - Added human-readable labels ("Facebook Page", "Instagram Profile") for social links to improve table scannability.
+    - Used color-coded icons (Blue for Facebook, Pink for Instagram, Sky for Twitter) for quick visual identification.
+- **Enhanced Search**:
+    - Extended server-side search logic to include the `web_site` field.
+    - Users can now search for "facebook", "instagram", or specific domain names to filter leads.
+
 ## [2026-01-28] - Table Copy Buttons
 
 ### Added

@@ -37,9 +37,10 @@ export async function GET(request: NextRequest) {
         const maxRating = parseFloat(searchParams.get('maxRating') || '5')
         const hasEmail = searchParams.get('hasEmail') === 'true'
         const doesNotHaveEmail = searchParams.get('doesNotHaveEmail') === 'true'
-        const hasWebsite = searchParams.get('hasWebsite') === 'true'
-        const doesNotHaveWebsite = searchParams.get('doesNotHaveWebsite') === 'true'
+        const websiteType = searchParams.get('websiteType') || 'all'
         const hasPhotos = searchParams.get('hasPhotos') === 'true'
+        const hasReviews = searchParams.get('hasReviews') === 'true'
+        const noReviews = searchParams.get('noReviews') === 'true'
         const category = searchParams.get('category')?.trim() || ''
         const sortBy = searchParams.get('sortBy') || 'created_at'
         const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc'
@@ -58,11 +59,12 @@ export async function GET(request: NextRequest) {
         // For search, we need to use textSearch or ilike on extracted fields
         // Supabase supports: data->>'field' for text extraction
         if (search) {
-            // Search in title, category, and address
+            // Search in title, category, address, and website
             query = query.or(
                 `data->>title.ilike.%${search}%,` +
                 `data->>category.ilike.%${search}%,` +
                 `data->>address.ilike.%${search}%,` +
+                `data->>web_site.ilike.%${search}%,` +
                 `data->complete_address->>city.ilike.%${search}%`
             )
         }
@@ -86,19 +88,45 @@ export async function GET(request: NextRequest) {
             query = query.not('data->>emails', 'is', 'null').neq('data->>emails', '[]')
         }
 
+        // Has reviews filter
+        if (hasReviews) {
+            query = query.gt('data->review_count', 0)
+        }
+
+        // No reviews filter
+        if (noReviews) {
+            query = query.or('data->review_count.eq.0,data->review_count.is.null')
+        }
+
         // Does not have email filter
         if (doesNotHaveEmail) {
             query = query.or('data->>emails.is.null,data->>emails.eq.[]')
         }
 
-        // Has website filter
-        if (hasWebsite) {
-            query = query.neq('data->>web_site', '')
-        }
-
-        // Does not have website filter
-        if (doesNotHaveWebsite) {
-            // Check for null or empty string
+        // Website Type filter
+        if (websiteType === 'proper') {
+            // Has website AND is NOT social media
+            query = query.neq('data->>web_site', '').not('data->>web_site', 'is', null)
+                .not('data->>web_site', 'ilike', '%facebook.com%')
+                .not('data->>web_site', 'ilike', '%fb.com%')
+                .not('data->>web_site', 'ilike', '%fb.watch%')
+                .not('data->>web_site', 'ilike', '%instagram.com%')
+                .not('data->>web_site', 'ilike', '%instagr.am%')
+                .not('data->>web_site', 'ilike', '%twitter.com%')
+                .not('data->>web_site', 'ilike', '%x.com%')
+        } else if (websiteType === 'social') {
+            // Has website AND IS social media
+            query = query.or(
+                'data->>web_site.ilike.%facebook.com%,' +
+                'data->>web_site.ilike.%fb.com%,' +
+                'data->>web_site.ilike.%fb.watch%,' +
+                'data->>web_site.ilike.%instagram.com%,' +
+                'data->>web_site.ilike.%instagr.am%,' +
+                'data->>web_site.ilike.%twitter.com%,' +
+                'data->>web_site.ilike.%x.com%'
+            )
+        } else if (websiteType === 'none') {
+            // No website
             query = query.or('data->>web_site.is.null,data->>web_site.eq.""')
         }
 

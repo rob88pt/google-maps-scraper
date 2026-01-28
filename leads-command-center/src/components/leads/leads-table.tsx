@@ -12,7 +12,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone, GripVertical, Check } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone, GripVertical, Check, Facebook, Instagram, Twitter } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { cn } from "@/lib/utils"
@@ -124,6 +124,23 @@ function RatingDisplay({ rating, count }: { rating: number; count: number }) {
             <span className="text-xs text-slate-500">({count})</span>
         </div>
     )
+}
+
+// Helper to detect social media platforms from URL
+function getSocialPlatform(url: string) {
+    if (!url) return null;
+    const lowerUrl = url.toLowerCase();
+
+    if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.com') || lowerUrl.includes('fb.watch')) {
+        return { icon: Facebook, label: 'Facebook Page', color: 'text-blue-500' };
+    }
+    if (lowerUrl.includes('instagram.com') || lowerUrl.includes('instagr.am')) {
+        return { icon: Instagram, label: 'Instagram Profile', color: 'text-pink-500' };
+    }
+    if (lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) {
+        return { icon: Twitter, label: 'Twitter Profile', color: 'text-sky-400' };
+    }
+    return null;
 }
 
 // Cell Copy Button component
@@ -246,6 +263,24 @@ export const columns: ColumnDef<LeadRow>[] = [
         cell: ({ row }) => {
             const website = row.getValue('web_site') as string
             if (!website) return <span className="text-slate-600">—</span>
+
+            const social = getSocialPlatform(website);
+
+            if (social) {
+                const Icon = social.icon;
+                return (
+                    <a
+                        href={website}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`text-sm ${social.color} hover:opacity-80 flex items-center gap-1.5 overflow-hidden`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span className="truncate font-medium">{social.label}</span>
+                    </a>
+                )
+            }
 
             // Clean display URL (remove protocol)
             const displayUrl = website.replace(/^https?:\/\//, '').replace(/\/$/, '')

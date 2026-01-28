@@ -1,6 +1,10 @@
 # Active Context
 
 ## Recent Changes
+- **[2026-01-28]** Overhauled **Filter UI**: Moved Web Presence to top and organized filters with section headers (Quality, Contact, Media).
+- **[2026-01-28]** Added **"No Reviews" Filter**: Enabling targeting of leads with 0 reviews.
+- **[2026-01-28]** Implemented **Website Type Filter** (Option A): Replaced website toggles with a dropdown for Proper Site, Social Only, and No Website.
+- **[2026-01-28]** Implemented Social Media Icons (Facebook, Instagram, Twitter) in the Website column and enhanced search logic to include non-empty website URLs.
 - **[2026-01-28]** Added Copy Buttons to Name, Category, Query, and Location columns.
 - **[2026-01-28]** Refined Location column display (Semibold Title / Street Subtitle) and added Copy Button.
 - **[2026-01-28]** Fixed Table scrolling and sticky headers by resolving nested overflow conflicts and flex hierarchy in `page.tsx`.

@@ -19,9 +19,10 @@ export interface LeadsFilters {
     maxRating: number
     hasEmail: boolean
     doesNotHaveEmail: boolean
-    hasWebsite: boolean
-    doesNotHaveWebsite: boolean
+    websiteType: 'all' | 'proper' | 'social' | 'none'
     hasPhotos: boolean
+    hasReviews: boolean
+    noReviews: boolean
 }
 
 interface LeadsFiltersProps {
@@ -34,9 +35,10 @@ const defaultFilters: LeadsFilters = {
     maxRating: 5,
     hasEmail: false,
     doesNotHaveEmail: false,
-    hasWebsite: false,
-    doesNotHaveWebsite: false,
+    websiteType: 'all',
     hasPhotos: false,
+    hasReviews: false,
+    noReviews: false,
 }
 
 export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
@@ -47,9 +49,10 @@ export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
         filters.maxRating < 5,
         filters.hasEmail,
         filters.doesNotHaveEmail,
-        filters.hasWebsite,
-        filters.doesNotHaveWebsite,
+        filters.websiteType !== 'all',
         filters.hasPhotos,
+        filters.hasReviews,
+        filters.noReviews,
     ].filter(Boolean).length
 
     const handleReset = () => {
@@ -87,150 +90,184 @@ export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
                         </Button>
                     </div>
 
-                    <Separator className="bg-slate-700" />
-
-                    {/* Rating Range */}
-                    <div className="space-y-2">
-                        <Label className="text-slate-300">Rating Range</Label>
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1.5">
-                                <Star className="h-4 w-4 text-yellow-400" />
-                                <Input
-                                    type="number"
-                                    min={0}
-                                    max={5}
-                                    step={0.5}
-                                    value={filters.minRating}
-                                    onChange={(e) => updateFilter('minRating', parseFloat(e.target.value) || 0)}
-                                    className="w-16 h-8 bg-slate-800 border-slate-700"
-                                />
+                    <div className="space-y-6">
+                        {/* 1. WEB PRESENCE - Priority Section */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Web Presence</Label>
+                                <Separator className="flex-1 bg-slate-800" />
                             </div>
-                            <span className="text-slate-500">to</span>
-                            <Input
-                                type="number"
-                                min={0}
-                                max={5}
-                                step={0.5}
-                                value={filters.maxRating}
-                                onChange={(e) => updateFilter('maxRating', parseFloat(e.target.value) || 5)}
-                                className="w-16 h-8 bg-slate-800 border-slate-700"
-                            />
+                            <div className="grid grid-cols-2 gap-2">
+                                <Button
+                                    variant={filters.websiteType === 'all' ? 'default' : 'outline'}
+                                    size="sm"
+                                    className={`h-8 text-xs ${filters.websiteType === 'all' ? 'bg-blue-600 hover:bg-blue-500' : 'border-slate-800 bg-transparent hover:bg-slate-800'}`}
+                                    onClick={() => updateFilter('websiteType', 'all')}
+                                >
+                                    All
+                                </Button>
+                                <Button
+                                    variant={filters.websiteType === 'proper' ? 'default' : 'outline'}
+                                    size="sm"
+                                    className={`h-8 text-xs ${filters.websiteType === 'proper' ? 'bg-blue-600 hover:bg-blue-500' : 'border-slate-800 bg-transparent hover:bg-slate-800'}`}
+                                    onClick={() => updateFilter('websiteType', 'proper')}
+                                    title="Excludes social media pages"
+                                >
+                                    Proper Site
+                                </Button>
+                                <Button
+                                    variant={filters.websiteType === 'social' ? 'default' : 'outline'}
+                                    size="sm"
+                                    className={`h-8 text-xs ${filters.websiteType === 'social' ? 'bg-blue-600 hover:bg-blue-500' : 'border-slate-800 bg-transparent hover:bg-slate-800'}`}
+                                    onClick={() => updateFilter('websiteType', 'social')}
+                                    title="Only Facebook, Instagram, Twitter/X"
+                                >
+                                    Social Only
+                                </Button>
+                                <Button
+                                    variant={filters.websiteType === 'none' ? 'default' : 'outline'}
+                                    size="sm"
+                                    className={`h-8 text-xs ${filters.websiteType === 'none' ? 'bg-blue-600 hover:bg-blue-500' : 'border-slate-800 bg-transparent hover:bg-slate-800'}`}
+                                    onClick={() => updateFilter('websiteType', 'none')}
+                                >
+                                    No Website
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* 2. QUALITY */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Quality & Reviews</Label>
+                                <Separator className="flex-1 bg-slate-800" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">Rating Range</Label>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5 flex-1">
+                                        <Star className="h-3.5 w-3.5 text-yellow-500/80" />
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            max={5}
+                                            step={0.5}
+                                            value={filters.minRating}
+                                            onChange={(e) => updateFilter('minRating', parseFloat(e.target.value) || 0)}
+                                            className="h-8 bg-slate-950 border-slate-800 text-xs text-slate-200"
+                                        />
+                                    </div>
+                                    <span className="text-slate-600 text-[10px]">TO</span>
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        max={5}
+                                        step={0.5}
+                                        value={filters.maxRating}
+                                        onChange={(e) => updateFilter('maxRating', parseFloat(e.target.value) || 5)}
+                                        className="h-8 bg-slate-950 border-slate-800 text-xs text-slate-200 flex-1"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 pt-1">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="hasReviews"
+                                        checked={filters.hasReviews}
+                                        onCheckedChange={(checked) => onFiltersChange({
+                                            ...filters,
+                                            hasReviews: !!checked,
+                                            noReviews: checked ? false : filters.noReviews
+                                        })}
+                                        className="border-slate-700 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                                    />
+                                    <label htmlFor="hasReviews" className="text-xs text-slate-300 cursor-pointer select-none">Has reviews</label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="noReviews"
+                                        checked={filters.noReviews}
+                                        onCheckedChange={(checked) => onFiltersChange({
+                                            ...filters,
+                                            noReviews: !!checked,
+                                            hasReviews: checked ? false : filters.hasReviews
+                                        })}
+                                        className="border-slate-700 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                                    />
+                                    <label htmlFor="noReviews" className="text-xs text-slate-300 cursor-pointer select-none">No reviews</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 3. CONTACT INFO */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Contact Setup</Label>
+                                <Separator className="flex-1 bg-slate-800" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="hasEmail"
+                                        checked={filters.hasEmail}
+                                        onCheckedChange={(checked) => onFiltersChange({
+                                            ...filters,
+                                            hasEmail: !!checked,
+                                            doesNotHaveEmail: checked ? false : filters.doesNotHaveEmail
+                                        })}
+                                        className="border-slate-700 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                                    />
+                                    <label htmlFor="hasEmail" className="text-xs text-slate-300 flex items-center gap-1.5 cursor-pointer select-none">
+                                        <Mail className="h-3 w-3 text-green-500/70" /> Has email
+                                    </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="doesNotHaveEmail"
+                                        checked={filters.doesNotHaveEmail}
+                                        onCheckedChange={(checked) => onFiltersChange({
+                                            ...filters,
+                                            doesNotHaveEmail: !!checked,
+                                            hasEmail: checked ? false : filters.hasEmail
+                                        })}
+                                        className="border-slate-700 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                                    />
+                                    <label htmlFor="doesNotHaveEmail" className="text-xs text-slate-300 flex items-center gap-1.5 cursor-pointer select-none">
+                                        <X className="h-3 w-3 text-red-500/70" /> No email
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 4. MEDIA */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Assets</Label>
+                                <Separator className="flex-1 bg-slate-800" />
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="hasPhotos"
+                                    checked={filters.hasPhotos}
+                                    onCheckedChange={(checked) => updateFilter('hasPhotos', !!checked)}
+                                    className="border-slate-700 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                                />
+                                <label htmlFor="hasPhotos" className="text-xs text-slate-300 flex items-center gap-1.5 cursor-pointer select-none">
+                                    <Camera className="h-3 w-3 text-purple-500/70" /> Has photos
+                                </label>
+                            </div>
                         </div>
                     </div>
 
-                    <Separator className="bg-slate-700" />
-
-                    {/* Data Availability */}
-                    <div className="space-y-3">
-                        <Label className="text-slate-300">Data Availability</Label>
-
-
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="hasEmail"
-                                checked={filters.hasEmail}
-                                onCheckedChange={(checked) => onFiltersChange({
-                                    ...filters,
-                                    hasEmail: !!checked,
-                                    doesNotHaveEmail: checked ? false : filters.doesNotHaveEmail
-                                })}
-                                className="border-slate-600"
-                            />
-                            <label
-                                htmlFor="hasEmail"
-                                className="text-sm text-slate-300 flex items-center gap-2 cursor-pointer"
-                            >
-                                <Mail className="h-4 w-4 text-green-400" />
-                                Has email
-                            </label>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="doesNotHaveEmail"
-                                checked={filters.doesNotHaveEmail}
-                                onCheckedChange={(checked) => onFiltersChange({
-                                    ...filters,
-                                    doesNotHaveEmail: !!checked,
-                                    hasEmail: checked ? false : filters.hasEmail
-                                })}
-                                className="border-slate-600"
-                            />
-                            <label
-                                htmlFor="doesNotHaveEmail"
-                                className="text-sm text-slate-300 flex items-center gap-2 cursor-pointer"
-                            >
-                                <X className="h-4 w-4 text-red-400" />
-                                No email
-                            </label>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="hasWebsite"
-                                checked={filters.hasWebsite}
-                                onCheckedChange={(checked) => onFiltersChange({
-                                    ...filters,
-                                    hasWebsite: !!checked,
-                                    doesNotHaveWebsite: checked ? false : filters.doesNotHaveWebsite
-                                })}
-                                className="border-slate-600"
-                            />
-                            <label
-                                htmlFor="hasWebsite"
-                                className="text-sm text-slate-300 flex items-center gap-2 cursor-pointer"
-                            >
-                                <Globe className="h-4 w-4 text-blue-400" />
-                                Has website
-                            </label>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="doesNotHaveWebsite"
-                                checked={filters.doesNotHaveWebsite}
-                                onCheckedChange={(checked) => onFiltersChange({
-                                    ...filters,
-                                    doesNotHaveWebsite: !!checked,
-                                    hasWebsite: checked ? false : filters.hasWebsite
-                                })}
-                                className="border-slate-600"
-                            />
-                            <label
-                                htmlFor="doesNotHaveWebsite"
-                                className="text-sm text-slate-300 flex items-center gap-2 cursor-pointer"
-                            >
-                                <X className="h-4 w-4 text-red-400" />
-                                No website
-                            </label>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="hasPhotos"
-                                checked={filters.hasPhotos}
-                                onCheckedChange={(checked) => updateFilter('hasPhotos', !!checked)}
-                                className="border-slate-600"
-                            />
-                            <label
-                                htmlFor="hasPhotos"
-                                className="text-sm text-slate-300 flex items-center gap-2 cursor-pointer"
-                            >
-                                <Camera className="h-4 w-4 text-purple-400" />
-                                Has photos
-                            </label>
-                        </div>
+                    <div className="pt-2">
+                        <Button
+                            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-lg shadow-blue-900/20"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            Apply Filters
+                        </Button>
                     </div>
-
-                    <Separator className="bg-slate-700" />
-
-                    {/* Apply button */}
-                    <Button
-                        className="w-full bg-blue-600 hover:bg-blue-700"
-                        onClick={() => setIsOpen(false)}
-                    >
-                        Apply Filters
-                    </Button>
                 </div>
             </PopoverContent>
         </Popover>

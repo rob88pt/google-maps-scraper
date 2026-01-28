@@ -10,9 +10,10 @@ export interface LeadsQueryOptions {
     maxRating?: number
     hasEmail?: boolean
     doesNotHaveEmail?: boolean
-    hasWebsite?: boolean
-    doesNotHaveWebsite?: boolean
+    websiteType?: 'all' | 'proper' | 'social' | 'none'
     hasPhotos?: boolean
+    hasReviews?: boolean
+    noReviews?: boolean
     category?: string
     sortBy?: 'title' | 'review_rating' | 'review_count' | 'created_at' | 'category' | 'city' | 'input_id'
     sortOrder?: 'asc' | 'desc'
@@ -54,9 +55,10 @@ async function fetchLeads(options: LeadsQueryOptions): Promise<LeadsResponse> {
     if (options.maxRating) params.set('maxRating', options.maxRating.toString())
     if (options.hasEmail) params.set('hasEmail', 'true')
     if (options.doesNotHaveEmail) params.set('doesNotHaveEmail', 'true')
-    if (options.hasWebsite) params.set('hasWebsite', 'true')
-    if (options.doesNotHaveWebsite) params.set('doesNotHaveWebsite', 'true')
+    if (options.websiteType && options.websiteType !== 'all') params.set('websiteType', options.websiteType)
     if (options.hasPhotos) params.set('hasPhotos', 'true')
+    if (options.hasReviews) params.set('hasReviews', 'true')
+    if (options.noReviews) params.set('noReviews', 'true')
     if (options.category) params.set('category', options.category)
     if (options.sortBy) params.set('sortBy', options.sortBy)
     if (options.sortOrder) params.set('sortOrder', options.sortOrder)
