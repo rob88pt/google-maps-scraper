@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { ChevronDown, Tag, Loader2, Search, X } from 'lucide-react'
+import { ChevronDown, Tag, Loader2, Search, X, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -10,6 +10,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
+import { toast } from 'sonner'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import type { CategoryCount } from '@/lib/hooks/use-categories'
@@ -47,19 +48,32 @@ export function CategoryFilter({
             if (!open) setSearchQuery('')
         }}>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 border-slate-700 bg-transparent min-w-[140px] justify-between">
+                <Button
+                    variant="outline"
+                    className={`gap-2 border-slate-700 bg-transparent min-w-[140px] justify-between transition-all duration-200 ${selectedCategory
+                        ? 'border-blue-500/50 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500'
+                        : 'hover:border-slate-600'
+                        }`}
+                >
                     <div className="flex items-center gap-2 truncate">
-                        <Tag className="h-4 w-4 text-slate-400 shrink-0" />
+                        <Tag className={`h-4 w-4 shrink-0 ${selectedCategory ? 'text-blue-400' : 'text-slate-400'}`} />
                         <span className="truncate">
                             {selectedCategory || 'All Categories'}
                         </span>
                     </div>
-                    {isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
-                    ) : (
-                        <ChevronDown className="h-4 w-4 text-slate-500 shrink-0" />
-                    )}
+                    <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                        {isLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                        ) : selectedCategory ? (
+                            <Badge variant="secondary" className="bg-blue-600 hover:bg-blue-600 text-white text-[10px] w-4 h-4 p-0 flex items-center justify-center rounded-full border-none shadow-sm shadow-blue-900/40">
+                                <Check className="h-2.5 w-2.5" />
+                            </Badge>
+                        ) : (
+                            <ChevronDown className="h-4 w-4 text-slate-500" />
+                        )}
+                    </div>
                 </Button>
+
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[280px] bg-slate-900 border-slate-700 p-0 overflow-hidden shadow-xl">
                 <DropdownMenuLabel className="px-3 pt-3 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">

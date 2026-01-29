@@ -1,5 +1,28 @@
 # Changelog
 
+## [2026-01-29] - Search and Filter Templates (Presets)
+
+### Added
+- Search Template System:
+    - New `search_templates` table in Supabase with RLS policies and multi-user support.
+    - `POST`, `GET`, `DELETE` API routes for managing templates.
+    - `usePresets` hook for state management.
+    - `SearchPresetManager` component:
+        - Save/Load templates capturing filters, sorting, column layout, category, and search query.
+        - Deletion confirmation dialog for safety.
+        - Helpful empty state with onboarding hint.
+- Visual Feedback:
+    - Active indicators (blue theme + badges) for Category and Preset filters.
+    - Robust drift detection using `useRef` comparison to prevent visual state race conditions.
+
+### Changed
+- Integrated `SearchPresetManager` into the `LeadsPage` toolbar.
+- Added detailed server-side logging to `api/search-templates` to track operations and debug mysterious deletions.
+
+### Fixed
+- Fixed a race condition where applying a preset would immediately clear the "active" indicator due to state update latency.
+
+
 ## [2026-01-28] - Robust Image Loading
 
 ### Added

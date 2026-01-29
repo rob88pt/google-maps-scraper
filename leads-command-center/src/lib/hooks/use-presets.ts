@@ -1,116 +1,73 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { JobPreset, JobParams } from '@/lib/supabase/types'
+import type { VisibilityState, SortingState } from '@tanstack/react-table'
+import type { LeadsFilters } from '@/components/leads/leads-filters'
 
-// Types for API responses
-interface PresetsResponse {
-    presets: JobPreset[]
-}
-
-interface CreatePresetParams {
+export interface SearchTemplate {
+    id: string
     name: string
-    params: JobParams & { outputJson?: boolean }
+    description: string | null
+    filters: LeadsFilters
+    column_visibility: VisibilityState
+    column_order: string[]
+    column_sizing: Record<string, number>
+    sorting: SortingState
+    category: string | null
+    search_query: string
+    created_at: string
+    updated_at: string
 }
 
-// Fetch all presets
-async function fetchPresets(): Promise<JobPreset[]> {
-    const response = await fetch('/api/presets')
-    if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to fetch presets')
-    }
-    const data: PresetsResponse = await response.json()
-    return data.presets
+export const presetKeys = {
+    all: ['search-templates'] as const,
+    lists: () => [...presetKeys.all, 'list'] as const,
 }
 
-// Create a new preset
-async function createPreset(params: CreatePresetParams): Promise<JobPreset> {
-    const response = await fetch('/api/presets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
-    })
-    if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to create preset')
-    }
-    const data = await response.json()
-    return data.preset
-}
-
-// Delete a preset
-async function deletePreset(presetId: string): Promise<void> {
-    const response = await fetch(`/api/presets/${presetId}`, {
-        method: 'DELETE',
-    })
-    if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to delete preset')
-    }
-}
-
-/**
- * Hook to fetch all presets.
- */
 export function usePresets() {
-    return useQuery({
-        queryKey: ['presets'],
-        queryFn: fetchPresets,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-    })
-}
-
-/**
- * Hook to create a new preset.
- */
-export function useCreatePreset() {
     const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: createPreset,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['presets'] })
+    const { data, isLoading, error } = useQuery({
+        queryKey: presetKeys.lists(),
+        queryFn: async () => {
+            const response = await fetch('/api/search-templates')
+            if (!response.ok) throw new Error('Failed to fetch templates')
+            const result = await response.json()
+            return result.templates as SearchTemplate[]
+        }
+    })
+
+    const savePreset = useMutation({
+        mutationFn: async (template: Partial<SearchTemplate>) => {
+            const response = await fetch('/api/search-templates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(template),
+            })
+            if (!response.ok) throw new Error('Failed to save template')
+            return response.json()
         },
-    })
-}
-
-/**
- * Hook to delete a preset.
- */
-export function useDeletePreset() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: deletePreset,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['presets'] })
-        },
+            queryClient.invalidateQueries({ queryKey: presetKeys.all })
+        }
     })
-}
 
-// Update a preset
-async function updatePreset(params: { id: string; name?: string; params?: JobParams }): Promise<void> {
-    const { id, ...data } = params
-    const response = await fetch(`/api/presets/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+    const deletePreset = useMutation({
+        mutationFn: async (id: string) => {
+            const response = await fetch(`/api/search-templates?id=${id}`, {
+                method: 'DELETE',
+            })
+            if (!response.ok) throw new Error('Failed to delete template')
+            return response.json()
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: presetKeys.all })
+        }
     })
-    if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to update preset')
+
+    return {
+        presets: data || [],
+        isLoading,
+        error,
+        savePreset,
+        deletePreset
     }
-}
-
-/**
- * Hook to update an existing preset.
- */
-export function useUpdatePreset() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: updatePreset,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['presets'] })
-        },
-    })
 }

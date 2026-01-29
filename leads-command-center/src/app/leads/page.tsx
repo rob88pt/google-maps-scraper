@@ -12,6 +12,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
+
 
 import { LeadsTable, type LeadRow, defaultColumnOrder } from "@/components/leads/leads-table"
 import { LeadsFilters, defaultFilters, type LeadsFilters as FilterType } from "@/components/leads/leads-filters"
@@ -23,6 +25,8 @@ import { CategoryFilter } from "@/components/leads/category-filter"
 import { useDebounce } from "@/lib/hooks/use-debounce"
 import { useMediaQuery } from "@/lib/hooks/use-media-query"
 import { useLocalStorage } from "@/lib/hooks/use-local-storage"
+import { usePresets, type SearchTemplate } from "@/lib/hooks/use-presets"
+import { SearchPresetManager } from "@/components/leads/search-preset-manager"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import {
     DropdownMenuCheckboxItem,
@@ -45,6 +49,8 @@ export default function LeadsPage() {
     const [columnVisibility, setColumnVisibility] = useLocalStorage<VisibilityState>('leads-column-visibility', {})
     const [columnOrder, setColumnOrder] = useLocalStorage<string[]>('leads-column-order', defaultColumnOrder)
     const [columnSizing, setColumnSizing] = useLocalStorage<Record<string, number>>('leads-column-sizing', {})
+    const [activePresetName, setActivePresetName] = React.useState<string | null>(null)
+    const lastAppliedPresetRef = React.useRef<SearchTemplate | null>(null)
 
     const [hasMounted, setHasMounted] = React.useState(false)
     const hasInitializedVisibility = React.useRef(false)
@@ -98,6 +104,28 @@ export default function LeadsPage() {
             hasInitializedVisibility.current = true
         }
     }, [hasMounted, isDesktop, isLoading, setColumnVisibility])
+
+    // Clear active preset if state drifts from the applied template
+    React.useEffect(() => {
+        if (!activePresetName || !lastAppliedPresetRef.current) return
+
+        const preset = lastAppliedPresetRef.current
+
+        // Check for actual drift
+        const hasDrifted =
+            JSON.stringify(filters) !== JSON.stringify(preset.filters) ||
+            search !== preset.search_query ||
+            JSON.stringify(sorting) !== JSON.stringify(preset.sorting) ||
+            selectedCategory !== preset.category ||
+            JSON.stringify(columnVisibility) !== JSON.stringify(preset.column_visibility) ||
+            JSON.stringify(columnOrder) !== JSON.stringify(preset.column_order)
+
+        if (hasDrifted) {
+            setActivePresetName(null)
+            lastAppliedPresetRef.current = null
+        }
+    }, [filters, search, sorting, selectedCategory, columnVisibility, columnOrder, activePresetName])
+
 
     // Export handlers
     const handleExport = async (format: 'csv' | 'json' | 'google-contacts') => {
@@ -153,6 +181,26 @@ export default function LeadsPage() {
         setColumnOrder(newOrder)
     }
 
+    const handleApplyPreset = (preset: SearchTemplate) => {
+        setFilters(preset.filters)
+        setColumnVisibility(preset.column_visibility)
+        setColumnOrder(preset.column_order)
+        setColumnSizing(preset.column_sizing)
+        setSorting(preset.sorting)
+        setSelectedCategory(preset.category)
+        setSearch(preset.search_query)
+        setPage(1)
+        lastAppliedPresetRef.current = preset
+        setActivePresetName(preset.name)
+        toast.success(`Applied preset: ${preset.name}`)
+    }
+
+    const handlePresetDeleted = (preset: SearchTemplate) => {
+        if (activePresetName === preset.name) {
+            setActivePresetName(null)
+        }
+    }
+
     return (
         <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
             <AppHeader />
@@ -177,6 +225,21 @@ export default function LeadsPage() {
                                 {data?.total ?? 0} results found
                                 {selectedIds.size > 0 && ` • ${selectedIds.size} selected`}
                             </p>
+
+                            <SearchPresetManager
+                                currentState={{
+                                    filters,
+                                    columnVisibility,
+                                    columnOrder,
+                                    columnSizing,
+                                    sorting,
+                                    category: selectedCategory,
+                                    searchQuery: search
+                                }}
+                                activePresetName={activePresetName}
+                                onApplyPreset={handleApplyPreset}
+                                onPresetDeleted={handlePresetDeleted}
+                            />
 
                             <LeadsFilters
                                 filters={filters}
