@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-01-29] - Archive System & Multi-User CRM Fixes
+
+### Added
+- **Soft-Archive System**: Replaced permanent deletion with a shared archiving mechanism.
+- **leads_with_status View**: Created a database view to properly join and filter leads by status, overcoming PostgREST's join filtering limitations.
+- **Status Filter**: Implemented a 3-way UI filter for "Active", "Archived", and "All" leads.
+- **Unarchive API**: Created `/api/leads/unarchive` endpoint for restoring leads.
+- **Toast Notifications**: Added comprehensive feedback for all archive/unarchive actions.
+
+### Fixed
+- **Foreign Key Constraints**: Resolved a critical issue where `lead_status` and `lead_notes` had restrictive composite keys that prevented users from managing leads they didn't personally scrape.
+- **RLS Policies**: Relaxed RLS on the `results` table to enable collaborative lead management among authenticated users.
+- **Method Not Allowed (405)**: Resolved API failure when restoring leads from the row actions menu.
+
 ## [2026-01-29] - CRM Phase 1: Backend & Persistence
 
 ### Added

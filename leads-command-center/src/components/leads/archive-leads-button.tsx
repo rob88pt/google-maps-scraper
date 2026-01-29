@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Trash2 } from 'lucide-react'
+import { Archive } from 'lucide-react'
 import { toast } from 'sonner'
 import {
     AlertDialog,
@@ -15,27 +15,27 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { useDeleteLeads } from '@/lib/hooks/use-leads'
+import { useArchiveLeads } from '@/lib/hooks/use-leads'
 
-interface DeleteLeadsButtonProps {
+interface ArchiveLeadsButtonProps {
     selectedIds: Set<number>
     onSuccess?: () => void
 }
 
-export function DeleteLeadsButton({ selectedIds, onSuccess }: DeleteLeadsButtonProps) {
-    const { mutate: deleteLeads, isPending } = useDeleteLeads()
+export function ArchiveLeadsButton({ selectedIds, onSuccess }: ArchiveLeadsButtonProps) {
+    const { mutate: archiveLeads, isPending } = useArchiveLeads()
     const [isOpen, setIsOpen] = React.useState(false)
 
-    const handleDelete = () => {
+    const handleArchive = () => {
         const ids = Array.from(selectedIds)
-        deleteLeads(ids, {
+        archiveLeads(ids, {
             onSuccess: (data) => {
-                toast.success(`Successfully deleted ${data.count} results`)
+                toast.success(`Successfully archived ${data.count} results`)
                 setIsOpen(false)
                 onSuccess?.()
             },
             onError: (error) => {
-                toast.error(error instanceof Error ? error.message : 'Failed to delete results')
+                toast.error(error instanceof Error ? error.message : 'Failed to archive results')
             }
         })
     }
@@ -47,19 +47,21 @@ export function DeleteLeadsButton({ selectedIds, onSuccess }: DeleteLeadsButtonP
             <AlertDialogTrigger asChild>
                 <Button
                     variant="outline"
-                    className="gap-2 border-red-900/50 hover:bg-red-900/20 text-red-400 hover:text-red-300 bg-transparent"
+                    title="Archive Selected"
+                    className="gap-2 border-amber-900/50 hover:bg-amber-900/20 text-amber-400 hover:text-amber-300 bg-transparent"
                 >
-                    <Trash2 className="h-4 w-4" />
+                    <Archive className="h-4 w-4" />
                     {selectedIds.size > 0 && `(${selectedIds.size})`}
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="bg-slate-900 border-slate-800 text-slate-200">
                 <AlertDialogHeader>
-                    <AlertDialogTitle className="text-white">Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogTitle className="text-white">Archive Results?</AlertDialogTitle>
                     <AlertDialogDescription className="text-slate-400">
-                        This action cannot be undone. This will permanently delete
+                        This will move
                         <span className="font-bold text-white px-1">{selectedIds.size}</span>
-                        {selectedIds.size === 1 ? 'result' : 'results'} from your database.
+                        {selectedIds.size === 1 ? 'result' : 'results'} to the archive.
+                        They will be hidden from the main list but can be recovered later.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -69,12 +71,12 @@ export function DeleteLeadsButton({ selectedIds, onSuccess }: DeleteLeadsButtonP
                     <AlertDialogAction
                         onClick={(e) => {
                             e.preventDefault()
-                            handleDelete()
+                            handleArchive()
                         }}
                         disabled={isPending}
-                        className="bg-red-600 hover:bg-red-700 text-white border-none"
+                        className="bg-amber-600 hover:bg-amber-700 text-white border-none"
                     >
-                        {isPending ? 'Deleting...' : 'Delete Permanently'}
+                        {isPending ? 'Archiving...' : 'Archive Results'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

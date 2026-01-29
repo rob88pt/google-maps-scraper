@@ -12,17 +12,6 @@ export interface LeadsResponse {
 /**
  * GET /api/leads
  * Fetches paginated leads with search, filter, and sort options.
- * 
- * Query params:
- * - page: Page number (1-indexed, default: 1)
- * - pageSize: Items per page (default: 25, max: 100)
- * - search: Search term for title, category, address
- * - minRating: Minimum rating filter
- * - maxRating: Maximum rating filter
- * - hasEmail: Filter for leads with emails
- * - hasWebsite: Filter for leads with website
- * - sortBy: Field to sort by (title, rating, review_count, created_at)
- * - sortOrder: asc or desc
  */
 export async function GET(request: NextRequest) {
     try {
@@ -45,36 +34,39 @@ export async function GET(request: NextRequest) {
         const maxReviewCount = searchParams.get('maxReviewCount') ? parseInt(searchParams.get('maxReviewCount')!) : null
         const category = searchParams.get('category')?.trim() || ''
         const includeArchived = searchParams.get('includeArchived') === 'true'
+        const archivedOnly = searchParams.get('archivedOnly') === 'true'
         const sortBy = searchParams.get('sortBy') || 'created_at'
         const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc'
 
         // Calculate offset
         const offset = (page - 1) * pageSize
 
-        // Build the query - join with lead_status and lead_notes
+        // Get the current user for status/notes filtering
+        const { data: { user } } = await supabase.auth.getUser()
+        const currentUserId = user?.id || '00000000-0000-0000-0000-000000000000'
+
+        // Build the query using the view that properly joins status
+        // The view allows us to filter by status at the row level
         let query = supabase
-            .from('results')
+            .from('leads_with_status')
             .select(`
-                id, 
-                data, 
-                created_at, 
-                user_id,
-                cid,
-                lead_status(status),
+                id, data, created_at, cid, crm_status, status_user_id,
                 lead_notes(count)
             `, { count: 'exact' })
 
-        // Apply archived filter
-        if (!includeArchived) {
-            // Postgrest doesn't support complex joins in filters easily via the client
-            // We can use the 'not.exists' or similar if we were using a different structure,
-            // but here we can filter by the joined table.
-            // Note: This requires lead_status to be joined.
-            query = query.or('status.neq.archived,status.is.null', { foreignTable: 'lead_status' })
+        // Filter to only show status for the current user (or null for leads without status)
+        if (user) {
+            query = query.or(`status_user_id.eq.${user.id},status_user_id.is.null`)
         }
 
-        // For search, we use the optimized search_index column
-        // We normalize the search term to match the index (lowercase + unaccented)
+        // Apply archived filter - this now works because crm_status is a column in the view
+        if (archivedOnly) {
+            query = query.eq('crm_status', 'archived')
+        } else if (!includeArchived) {
+            query = query.neq('crm_status', 'archived')
+        }
+
+        // Search logic
         if (search) {
             const normalizedSearch = search
                 .normalize("NFD")
@@ -89,46 +81,27 @@ export async function GET(request: NextRequest) {
             query = query.eq('data->>category', category)
         }
 
-        // Rating filter - compare numeric values in JSONB
-        if (minRating > 0) {
-            query = query.gte('data->review_rating', minRating)
-        }
-        if (maxRating < 5) {
-            query = query.lte('data->review_rating', maxRating)
-        }
+        // Rating filter
+        if (minRating > 0) query = query.gte('data->review_rating', minRating)
+        if (maxRating < 5) query = query.lte('data->review_rating', maxRating)
 
-        // Has email filter - check if emails array is not empty
-        // data->>emails returns SQL NULL if json is null, or string representation
+        // Email filters
         if (hasEmail) {
             query = query.not('data->>emails', 'is', 'null').neq('data->>emails', '[]')
         }
-
-        // Has reviews filter
-        if (hasReviews) {
-            query = query.gt('data->review_count', 0)
-        }
-
-        // No reviews filter
-        if (noReviews) {
-            query = query.or('data->review_count.eq.0,data->review_count.is.null')
-        }
-
-        // Review Count Range Filter
-        if (minReviewCount !== null) {
-            query = query.gte('data->review_count', minReviewCount)
-        }
-        if (maxReviewCount !== null) {
-            query = query.lte('data->review_count', maxReviewCount)
-        }
-
-        // Does not have email filter
         if (doesNotHaveEmail) {
             query = query.or('data->>emails.is.null,data->>emails.eq.[]')
         }
 
+        // Review filters
+        if (hasReviews) query = query.gt('data->review_count', 0)
+        if (noReviews) query = query.or('data->review_count.eq.0,data->review_count.is.null')
+
+        if (minReviewCount !== null) query = query.gte('data->review_count', minReviewCount)
+        if (maxReviewCount !== null) query = query.lte('data->review_count', maxReviewCount)
+
         // Website Type filter
         if (websiteType === 'proper') {
-            // Has website AND is NOT social media
             query = query.neq('data->>web_site', '').not('data->>web_site', 'is', null)
                 .not('data->>web_site', 'ilike', '%facebook.com%')
                 .not('data->>web_site', 'ilike', '%fb.com%')
@@ -138,7 +111,6 @@ export async function GET(request: NextRequest) {
                 .not('data->>web_site', 'ilike', '%twitter.com%')
                 .not('data->>web_site', 'ilike', '%x.com%')
         } else if (websiteType === 'social') {
-            // Has website AND IS social media
             query = query.or(
                 'data->>web_site.ilike.%facebook.com%,' +
                 'data->>web_site.ilike.%fb.com%,' +
@@ -149,18 +121,15 @@ export async function GET(request: NextRequest) {
                 'data->>web_site.ilike.%x.com%'
             )
         } else if (websiteType === 'none') {
-            // No website
             query = query.or('data->>web_site.is.null,data->>web_site.eq.""')
         }
 
-        // Has photos filter
+        // Photos filter
         if (hasPhotos) {
-            // Check that images array is not empty and not null
             query = query.not('data->>images', 'is', 'null').neq('data->>images', '[]')
         }
 
-        // Apply sorting
-        // For JSONB fields, we need to use the arrow operator
+        // Sorting
         const validSortFields: Record<string, string> = {
             'title': 'data->title',
             'review_rating': 'data->review_rating',
@@ -174,32 +143,23 @@ export async function GET(request: NextRequest) {
         const sortField = validSortFields[sortBy] || 'created_at'
         query = query.order(sortField, { ascending: sortOrder === 'asc' })
 
-        // Apply pagination
+        // Pagination
         query = query.range(offset, offset + pageSize - 1)
 
-        // Execute query
         const { data: results, error, count } = await query
 
         if (error) {
             console.error('[API] Failed to fetch leads:', error)
-            return NextResponse.json(
-                { error: 'Failed to fetch leads.', details: error.message },
-                { status: 500 }
-            )
+            return NextResponse.json({ error: error.message }, { status: 500 })
         }
 
-        // Transform results - extract lead data and enrich with CRM status/metadata
+        // Transform and enrich
         const leads = (results as any[] || []).map(row => {
             const leadData = row.data as Lead
-
-            // Flatten joined data
-            const statusObj = row.lead_status as { status: string } | { status: string }[] | null
             const notesObj = row.lead_notes as { count: number } | { count: number }[] | null
 
-            // Supabase returns array even for single if joined, or object depending on version/config
-            const crm_status = Array.isArray(statusObj)
-                ? (statusObj[0]?.status || 'new')
-                : (statusObj?.status || 'new')
+            // Status now comes directly from the view
+            const crm_status = row.crm_status || 'new'
 
             const notes_count = Array.isArray(notesObj)
                 ? (notesObj[0]?.count || 0)
@@ -214,27 +174,19 @@ export async function GET(request: NextRequest) {
             }
         })
 
-        const response: LeadsResponse = {
-            leads,
-            total: count || 0,
-            page,
-            pageSize
-        }
 
-        return NextResponse.json(response)
+        return NextResponse.json({ leads, total: count || 0, page, pageSize })
 
     } catch (error) {
         console.error('[API] Unexpected error:', error)
-        return NextResponse.json(
-            { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown' },
-            { status: 500 }
-        )
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }
 
 /**
  * DELETE /api/leads
- * Deletes multiple leads by ID.
+ * This endpoint now performs a batch ARCHIVE instead of permanent deletion.
+ * (Keeping the method as DELETE for compatibility with existing hooks, but logic is "soft-archive")
  */
 export async function DELETE(request: NextRequest) {
     try {
@@ -242,31 +194,47 @@ export async function DELETE(request: NextRequest) {
         const { ids } = await request.json()
 
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
-            return NextResponse.json(
-                { error: 'Invalid or empty IDs array provided.' },
-                { status: 400 }
-            )
+            return NextResponse.json({ error: 'Invalid or empty IDs array.' }, { status: 400 })
         }
 
-        const { error } = await supabase
+        // Get the current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+        // 1. Get the CIDs for these IDs (since lead_status uses CID)
+        const { data: leads, error: fetchError } = await supabase
             .from('results')
-            .delete()
+            .select('cid')
             .in('id', ids)
 
-        if (error) {
-            console.error('[API] Failed to delete leads:', error)
-            return NextResponse.json(
-                { error: 'Failed to delete leads.', details: error.message },
-                { status: 500 }
-            )
+        if (fetchError || !leads) {
+            throw new Error(fetchError?.message || 'Failed to fetch lead CIDs')
         }
 
-        return NextResponse.json({ success: true, count: ids.length })
+        const cids = leads.map(l => l.cid)
+
+        // 2. Perform upsert into lead_status for each CID
+        // This marks them as 'archived' for this specific user
+        const archivePayload = cids.map(cid => ({
+            user_id: user.id,
+            lead_cid: cid,
+            status: 'archived'
+        }))
+
+        const { error: archiveError } = await supabase
+            .from('lead_status')
+            .upsert(archivePayload, { onConflict: 'user_id,lead_cid' })
+
+        if (archiveError) {
+            console.error('[API] Failed to archive leads:', archiveError)
+            return NextResponse.json({ error: 'Failed to archive leads.', details: archiveError.message }, { status: 500 })
+        }
+
+        return NextResponse.json({ success: true, count: ids.length, action: 'archived' })
     } catch (error) {
-        console.error('[API] Unexpected error during delete:', error)
-        return NextResponse.json(
-            { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown' },
-            { status: 500 }
-        )
+        console.error('[API] Unexpected error during archive:', error)
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }
+
+

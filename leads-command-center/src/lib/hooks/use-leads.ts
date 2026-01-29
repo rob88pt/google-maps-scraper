@@ -17,6 +17,8 @@ export interface LeadsQueryOptions {
     minReviewCount?: number
     maxReviewCount?: number
     category?: string
+    includeArchived?: boolean
+    archivedOnly?: boolean
     sortBy?: 'title' | 'review_rating' | 'review_count' | 'created_at' | 'category' | 'city' | 'input_id'
     sortOrder?: 'asc' | 'desc'
 }
@@ -64,6 +66,8 @@ async function fetchLeads(options: LeadsQueryOptions): Promise<LeadsResponse> {
     if (options.minReviewCount !== undefined) params.set('minReviewCount', options.minReviewCount.toString())
     if (options.maxReviewCount !== undefined) params.set('maxReviewCount', options.maxReviewCount.toString())
     if (options.category) params.set('category', options.category)
+    if (options.includeArchived) params.set('includeArchived', 'true')
+    if (options.archivedOnly) params.set('archivedOnly', 'true')
     if (options.sortBy) params.set('sortBy', options.sortBy)
     if (options.sortOrder) params.set('sortOrder', options.sortOrder)
 
@@ -229,6 +233,40 @@ export function useDeleteLeads() {
         },
         onSuccess: () => {
             // Invalidate all leads queries to refresh the UI
+            queryClient.invalidateQueries({ queryKey: leadsKeys.all })
+        },
+    })
+}
+
+/**
+ * Hook to archive leads
+ */
+export function useArchiveLeads() {
+    return useDeleteLeads() // Repurposed for soft-archive
+}
+
+/**
+ * Hook to unarchive leads
+ */
+export function useUnarchiveLeads() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async (ids: number[]) => {
+            const response = await fetch('/api/leads/unarchive', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids }),
+            })
+
+            if (!response.ok) {
+                const error = await response.json()
+                throw new Error(error.error || 'Failed to unarchive leads')
+            }
+
+            return response.json()
+        },
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: leadsKeys.all })
         },
     })

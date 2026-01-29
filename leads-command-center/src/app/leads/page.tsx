@@ -15,11 +15,12 @@ import {
 import { toast } from "sonner"
 
 
+import { cn } from "@/lib/utils"
 import { LeadsTable, type LeadRow, defaultColumnOrder } from "@/components/leads/leads-table"
 import { LeadsFilters, defaultFilters, type LeadsFilters as FilterType } from "@/components/leads/leads-filters"
 import { LeadDetailPanel } from "@/components/leads/lead-detail-panel"
-import { DeleteLeadsButton } from '@/components/leads/delete-leads-button'
-import { useLeads, useInfiniteLeads, type LeadsQueryOptions } from "@/lib/hooks/use-leads"
+import { ArchiveLeadsButton } from '@/components/leads/archive-leads-button'
+import { useLeads, useInfiniteLeads, useUnarchiveLeads, type LeadsQueryOptions } from "@/lib/hooks/use-leads"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { CategoryFilter } from "@/components/leads/category-filter"
 import { useDebounce } from "@/lib/hooks/use-debounce"
@@ -28,6 +29,7 @@ import { useLocalStorage } from "@/lib/hooks/use-local-storage"
 import { usePresets, type SearchTemplate } from "@/lib/hooks/use-presets"
 import { SearchPresetManager } from "@/components/leads/search-preset-manager"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
     DropdownMenuCheckboxItem,
     DropdownMenuLabel,
@@ -50,6 +52,7 @@ export default function LeadsPage() {
     const [columnOrder, setColumnOrder] = useLocalStorage<string[]>('leads-column-order', defaultColumnOrder)
     const [columnSizing, setColumnSizing] = useLocalStorage<Record<string, number>>('leads-column-sizing', {})
     const [activePresetName, setActivePresetName] = React.useState<string | null>(null)
+    const [archiveFilter, setArchiveFilter] = React.useState<'active' | 'archived' | 'all'>('active')
     const lastAppliedPresetRef = React.useRef<SearchTemplate | null>(null)
 
     const [hasMounted, setHasMounted] = React.useState(false)
@@ -77,7 +80,9 @@ export default function LeadsPage() {
         category: selectedCategory || undefined,
         sortBy: sorting[0]?.id as any || 'created_at',
         sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
-    }), [debouncedSearch, filters, selectedCategory, sorting])
+        includeArchived: archiveFilter === 'all' || undefined,
+        archivedOnly: archiveFilter === 'archived' || undefined,
+    }), [debouncedSearch, filters, selectedCategory, sorting, archiveFilter])
 
     // Fetch leads
     const {
@@ -125,13 +130,14 @@ export default function LeadsPage() {
         const preset = lastAppliedPresetRef.current
 
         // Check for actual drift
+        const presetAny = preset as any
         const hasDrifted =
-            JSON.stringify(filters) !== JSON.stringify(preset.filters) ||
-            search !== preset.search_query ||
-            JSON.stringify(sorting) !== JSON.stringify(preset.sorting) ||
-            selectedCategory !== preset.category ||
-            JSON.stringify(columnVisibility) !== JSON.stringify(preset.column_visibility) ||
-            JSON.stringify(columnOrder) !== JSON.stringify(preset.column_order)
+            JSON.stringify(filters) !== JSON.stringify(presetAny.filters || defaultFilters) ||
+            search !== (presetAny.search_query || '') ||
+            JSON.stringify(sorting) !== JSON.stringify(presetAny.sorting || []) ||
+            selectedCategory !== (presetAny.category || null) ||
+            JSON.stringify(columnVisibility) !== JSON.stringify(presetAny.column_visibility || {}) ||
+            JSON.stringify(columnOrder) !== JSON.stringify(presetAny.column_order || defaultColumnOrder)
 
         if (hasDrifted) {
             setActivePresetName(null)
@@ -195,13 +201,14 @@ export default function LeadsPage() {
     }
 
     const handleApplyPreset = (preset: SearchTemplate) => {
-        setFilters(preset.filters)
-        setColumnVisibility(preset.column_visibility)
-        setColumnOrder(preset.column_order)
-        setColumnSizing(preset.column_sizing)
-        setSorting(preset.sorting)
-        setSelectedCategory(preset.category)
-        setSearch(preset.search_query)
+        const presetAny = preset as any
+        if (presetAny.filters) setFilters(presetAny.filters)
+        if (presetAny.column_visibility) setColumnVisibility(presetAny.column_visibility)
+        if (presetAny.column_order) setColumnOrder(presetAny.column_order)
+        if (presetAny.column_sizing) setColumnSizing(presetAny.column_sizing)
+        if (presetAny.sorting) setSorting(presetAny.sorting)
+        if (presetAny.category !== undefined) setSelectedCategory(presetAny.category)
+        if (presetAny.search_query !== undefined) setSearch(presetAny.search_query)
         lastAppliedPresetRef.current = preset
         setActivePresetName(preset.name)
         toast.success(`Applied preset: ${preset.name}`)
@@ -320,7 +327,34 @@ export default function LeadsPage() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
-                            <DeleteLeadsButton
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="gap-2 border-slate-700 bg-transparent min-w-[120px] justify-between">
+                                        <span className="text-xs text-slate-400 font-medium">
+                                            {archiveFilter === 'active' && 'Active Leads'}
+                                            {archiveFilter === 'archived' && 'Archived Only'}
+                                            {archiveFilter === 'all' && 'All Leads'}
+                                        </span>
+                                        <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700">
+                                    <DropdownMenuItem onClick={() => setArchiveFilter('active')} className="cursor-pointer gap-2">
+                                        <div className={cn("h-2 w-2 rounded-full", archiveFilter === 'active' ? "bg-blue-500" : "bg-slate-700")} />
+                                        Active Leads
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setArchiveFilter('archived')} className="cursor-pointer gap-2">
+                                        <div className={cn("h-2 w-2 rounded-full", archiveFilter === 'archived' ? "bg-amber-500" : "bg-slate-700")} />
+                                        Archived Only
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setArchiveFilter('all')} className="cursor-pointer gap-2">
+                                        <div className={cn("h-2 w-2 rounded-full", archiveFilter === 'all' ? "bg-slate-400" : "bg-slate-700")} />
+                                        All Leads (Incl. Archived)
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            <ArchiveLeadsButton
                                 selectedIds={selectedIds}
                                 onSuccess={() => setSelectedIds(new Set())}
                             />

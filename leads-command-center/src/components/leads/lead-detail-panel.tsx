@@ -16,7 +16,9 @@ import {
     ChevronRight,
     Tag,
     StickyNote,
-    Loader2
+    Loader2,
+    Archive,
+    RotateCcw
 } from 'lucide-react'
 import {
     Dialog,
@@ -38,7 +40,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import type { Lead } from '@/lib/supabase/types'
-import { useLeadNotes, useLeadStatus } from '@/lib/hooks/use-leads'
+import { useLeadNotes, useLeadStatus, useArchiveLeads, useUnarchiveLeads } from '@/lib/hooks/use-leads'
 import { LazyImage } from './lazy-image'
 
 export type LeadRow = Lead & { id: number; created_at: string }
@@ -233,6 +235,9 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
         addNote
     } = useLeadNotes(lead?.cid || '')
 
+    const { mutate: archiveLead, isPending: isArchiving } = useArchiveLeads()
+    const { mutate: unarchiveLead, isPending: isUnarchiving } = useUnarchiveLeads()
+
     if (!lead) return null
 
     const hasOpenHours = lead.open_hours && Object.keys(lead.open_hours).length > 0
@@ -273,14 +278,52 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
         <div className="w-full h-full flex flex-col bg-slate-900 border-l border-slate-800">
             {/* Header */}
             <div className="flex items-center justify-between py-3 px-4 border-b border-slate-800">
-                <h3 className="font-semibold text-white truncate">Lead Details</h3>
-                {showCloseButton && (
-                    <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={onClose}>
+                <div className="flex items-center gap-2 truncate flex-1">
+                    <h3 className="font-semibold text-white truncate">Lead Details</h3>
+                    {currentStatus === 'archived' && (
+                        <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-500 bg-amber-500/10 uppercase">Archived</Badge>
+                    )}
+                </div>
+                <div className="flex items-center gap-1">
+                    {currentStatus === 'archived' ? (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Restore from Archive"
+                            className="h-8 w-8 text-amber-400 hover:text-amber-300 hover:bg-amber-400/10"
+                            disabled={isUnarchiving}
+                            onClick={() => {
+                                unarchiveLead([lead.id], {
+                                    onSuccess: () => toast.success('Lead restored from archive'),
+                                    onError: () => toast.error('Failed to restore lead')
+                                })
+                            }}
+                        >
+                            {isUnarchiving ? <Loader2 className="h-4 w-4 animate-spin text-amber-400" /> : <RotateCcw className="h-4 w-4" />}
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Archive"
+                            className="h-8 w-8 text-amber-500/70 hover:text-amber-500 hover:bg-amber-500/10"
+                            disabled={isArchiving}
+                            onClick={() => {
+                                archiveLead([lead.id], {
+                                    onSuccess: () => toast.success('Lead moved to archive'),
+                                    onError: () => toast.error('Failed to archive lead')
+                                })
+                            }}
+                        >
+                            {isArchiving ? <Loader2 className="h-4 w-4 animate-spin text-amber-500" /> : <Archive className="h-4 w-4" />}
+                        </Button>
+                    )}
+                    {showCloseButton && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
                             <X className="h-4 w-4" />
                         </Button>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* Content */}

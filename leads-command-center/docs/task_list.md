@@ -6,8 +6,8 @@
 ## 🟡 In Progress
 - [/] CRM Feature Improvements (Added: 2026-01-29)
   - [x] **Phase 1**: Backend – Status + Notes metadata in API (Done: 2026-01-29)
-  - [ ] **Phase 2**: Table – Status-colored checkboxes + Notes badge (Space-saving)
-  - [ ] **Phase 3**: Archive System – Replace delete with archive
+  - [x] **Phase 2**: Table – Status-colored checkboxes + Notes badge (Done: 2026-01-29)
+  - [x] **Phase 3**: Archive System – Replace delete with archive (Done: 2026-01-29)
   - [ ] **Phase 4**: Detail Panel – Condense CRM (Expandable notes input)
 
 ## 📋 Backlog (To Do)

@@ -1,18 +1,17 @@
 # Active Context
 
 ## Current Focus
-- Phase 3: Archive System (Ready to Implement)
+- Phase 4: Detail Panel Condensation & UI Polishing
 
 ## Recent Changes
-- ✅ **Stability Hotfix**: Resolved `PGRST200` error and Next.js 15+ `params` Promise issues.
-- ✅ **Multi-User Fix**: Upgraded `lead_status` to composite PK `(user_id, lead_cid)` and enabled RLS.
-- ✅ **UI Fix**: Resolved application crash by unifying `usePresets` hooks.
-- ✅ **CRM Phase 2**: Implemented status-colored checkboxes and notes indicators in `LeadsTable`.
+- ✅ **Archive System**: Replaced bulk delete with a robust "soft-archive" system.
+- ✅ **Multi-User CRM**: Fixed FK constraints and RLS on `lead_status` to allow shared lead management.
+- ✅ **Advanced Filtering**: Implemented a 3-way Status Filter (Active, Archived, All) using a database view to overcome PostgREST limitations.
+- ✅ **API Robustness**: Added `/api/leads/unarchive` and integrated toast feedback for all CRM actions.
 
 ## Next Steps
-- [ ] Phase 3: Replace Delete with Archive
-- [ ] Phase 3: Implement "Show Archived" toggle in Leads UI
-- [ ] Phase 4: Consolidate lead details for higher density
+- [ ] Phase 4: Consolidate lead details for higher information density
+- [ ] Implement expandable notes input in the detail panel
 
 ## Blockers / Open Questions
 - None. (System is stable and verified).

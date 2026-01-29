@@ -12,8 +12,9 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone, GripVertical, Check, Facebook, Instagram, Twitter, MessageSquare } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone, GripVertical, Check, Facebook, Instagram, Twitter, MessageSquare, RotateCcw, Archive } from 'lucide-react'
 import { toast } from 'sonner'
+import { useArchiveLeads, useUnarchiveLeads } from '@/lib/hooks/use-leads'
 
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
@@ -450,6 +451,8 @@ export const columns: ColumnDef<LeadRow>[] = [
         enableHiding: false,
         cell: ({ row }) => {
             const lead = row.original
+            const { mutate: archiveLeads } = useArchiveLeads()
+            const { mutate: unarchiveLeads } = useUnarchiveLeads()
 
             const copyToClipboard = (text: string, label: string) => {
                 navigator.clipboard.writeText(text)
@@ -511,6 +514,30 @@ export const columns: ColumnDef<LeadRow>[] = [
                             <Copy className="mr-2 h-4 w-4" />
                             Copy as JSON
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-slate-700" />
+                        {lead.crm_status === 'archived' ? (
+                            <DropdownMenuItem
+                                onClick={() => unarchiveLeads([lead.id], {
+                                    onSuccess: () => toast.success('Lead restored from archive'),
+                                    onError: (err) => toast.error('Failed to restore lead: ' + err.message)
+                                })}
+                                className="cursor-pointer text-amber-400 focus:text-amber-300 focus:bg-amber-400/10"
+                            >
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                Restore from Archive
+                            </DropdownMenuItem>
+                        ) : (
+                            <DropdownMenuItem
+                                onClick={() => archiveLeads([lead.id], {
+                                    onSuccess: () => toast.success('Lead moved to archive'),
+                                    onError: (err) => toast.error('Failed to archive lead: ' + err.message)
+                                })}
+                                className="cursor-pointer text-amber-500 focus:text-amber-400 focus:bg-amber-500/10"
+                            >
+                                <Archive className="mr-2 h-4 w-4" />
+                                Archive Lead
+                            </DropdownMenuItem>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             )
