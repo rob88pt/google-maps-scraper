@@ -19,7 +19,7 @@ import { LeadsTable, type LeadRow, defaultColumnOrder } from "@/components/leads
 import { LeadsFilters, defaultFilters, type LeadsFilters as FilterType } from "@/components/leads/leads-filters"
 import { LeadDetailPanel } from "@/components/leads/lead-detail-panel"
 import { DeleteLeadsButton } from '@/components/leads/delete-leads-button'
-import { useLeads, type LeadsQueryOptions } from "@/lib/hooks/use-leads"
+import { useLeads, useInfiniteLeads, type LeadsQueryOptions } from "@/lib/hooks/use-leads"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { CategoryFilter } from "@/components/leads/category-filter"
 import { useDebounce } from "@/lib/hooks/use-debounce"
@@ -61,9 +61,8 @@ export default function LeadsPage() {
     // Debounce search input
     const debouncedSearch = useDebounce(search, 300)
     // Build query options
-    const queryOptions: LeadsQueryOptions = React.useMemo(() => ({
-        page,
-        pageSize: 25,
+    const queryOptions: Omit<LeadsQueryOptions, 'page'> = React.useMemo(() => ({
+        pageSize: 50, // Increased page size for smoother scrolling
         search: debouncedSearch || undefined,
         minRating: filters.minRating > 0 ? filters.minRating : undefined,
         maxRating: filters.maxRating < 5 ? filters.maxRating : undefined,
@@ -78,10 +77,24 @@ export default function LeadsPage() {
         category: selectedCategory || undefined,
         sortBy: sorting[0]?.id as any || 'created_at',
         sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
-    }), [page, debouncedSearch, filters, selectedCategory, sorting])
+    }), [debouncedSearch, filters, selectedCategory, sorting])
 
     // Fetch leads
-    const { data, isLoading, error } = useLeads(queryOptions)
+    const {
+        data: infiniteData,
+        isLoading,
+        error,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage
+    } = useInfiniteLeads(queryOptions)
+
+    // Flatten pages for the table
+    const allLeads = React.useMemo(() => {
+        return infiniteData?.pages.flatMap(page => page.leads) ?? []
+    }, [infiniteData])
+
+    const totalResults = infiniteData?.pages[0]?.total ?? 0
     // Fetch categories
     const { data: categoriesData, isLoading: isCategoriesLoading } = useCategories(queryOptions)
 
@@ -135,7 +148,7 @@ export default function LeadsPage() {
         }
 
         // Find CIDs for selected leads
-        const selectedCids = data?.leads
+        const selectedCids = allLeads
             .filter(lead => selectedIds.has(lead.id))
             .map(lead => lead.cid) || []
 
@@ -189,7 +202,6 @@ export default function LeadsPage() {
         setSorting(preset.sorting)
         setSelectedCategory(preset.category)
         setSearch(preset.search_query)
-        setPage(1)
         lastAppliedPresetRef.current = preset
         setActivePresetName(preset.name)
         toast.success(`Applied preset: ${preset.name}`)
@@ -222,7 +234,7 @@ export default function LeadsPage() {
 
                         <div className="ml-auto flex items-center gap-4">
                             <p className="text-sm text-slate-400 whitespace-nowrap">
-                                {data?.total ?? 0} results found
+                                {totalResults} results found
                                 {selectedIds.size > 0 && ` • ${selectedIds.size} selected`}
                             </p>
 
@@ -251,7 +263,6 @@ export default function LeadsPage() {
                                 selectedCategory={selectedCategory}
                                 onCategoryChange={(cat) => {
                                     setSelectedCategory(cat)
-                                    setPage(1) // Reset to first page
                                 }}
                                 isLoading={isCategoriesLoading}
                             />
@@ -365,7 +376,7 @@ export default function LeadsPage() {
                     <div className="flex-1 flex flex-col min-h-0">
                         {hasMounted ? (
                             <LeadsTable
-                                data={data?.leads ?? []}
+                                data={allLeads}
                                 isLoading={isLoading}
                                 onRowClick={setSelectedLead}
                                 selectedIds={selectedIds}
@@ -379,8 +390,10 @@ export default function LeadsPage() {
                                 sorting={sorting}
                                 onSortingChange={(newSorting) => {
                                     setSorting(newSorting)
-                                    setPage(1) // Reset to first page
                                 }}
+                                hasNextPage={hasNextPage}
+                                isFetchingNextPage={isFetchingNextPage}
+                                onFetchNextPage={fetchNextPage}
                             />
                         ) : (
                             <div className="flex-1 flex items-center justify-center">
@@ -389,34 +402,6 @@ export default function LeadsPage() {
                         )}
                     </div>
 
-                    {/* Pagination */}
-                    {data && data.total > data.pageSize && (
-                        <div className="flex items-center justify-between pt-2">
-                            <p className="text-sm text-slate-400">
-                                Page {data.page} of {Math.ceil(data.total / data.pageSize)}
-                            </p>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                                    disabled={page === 1}
-                                    className="border-slate-700"
-                                >
-                                    Previous
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setPage(p => p + 1)}
-                                    disabled={page >= Math.ceil(data.total / data.pageSize)}
-                                    className="border-slate-700"
-                                >
-                                    Next
-                                </Button>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 {/* Detail panel - SIDECAR for desktop (xl+) */}

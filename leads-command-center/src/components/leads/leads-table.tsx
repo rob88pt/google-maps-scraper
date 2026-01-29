@@ -59,6 +59,9 @@ interface LeadsTableProps {
     onColumnOrderChange?: (order: string[]) => void
     columnSizing?: Record<string, number>
     onColumnSizingChange?: (sizing: Record<string, number>) => void
+    hasNextPage?: boolean
+    isFetchingNextPage?: boolean
+    onFetchNextPage?: () => void
 }
 
 // Helper for column labels
@@ -499,6 +502,9 @@ export function LeadsTable({
     onColumnOrderChange: onColumnOrderChangeProp,
     columnSizing: columnSizingProp,
     onColumnSizingChange: onColumnSizingChangeProp,
+    hasNextPage,
+    isFetchingNextPage,
+    onFetchNextPage,
 }: LeadsTableProps) {
     const [internalSorting, setInternalSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -782,6 +788,35 @@ export function LeadsTable({
                     </TableBody>
                 </Table>
             </div>
+
+            {/* Pagination / Sentinel */}
+            {hasNextPage && (
+                <div
+                    ref={(el) => {
+                        if (el) {
+                            const observer = new IntersectionObserver(
+                                (entries) => {
+                                    if (entries[0].isIntersecting && !isFetchingNextPage && onFetchNextPage) {
+                                        onFetchNextPage()
+                                    }
+                                },
+                                { threshold: 0.1 }
+                            )
+                            observer.observe(el)
+                        }
+                    }}
+                    className="flex justify-center p-4"
+                >
+                    {isFetchingNextPage ? (
+                        <div className="flex items-center gap-2 text-slate-400">
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-700 border-t-blue-500" />
+                            <span>Loading more...</span>
+                        </div>
+                    ) : (
+                        <div className="h-4 w-4" /> // Sentinel spacer
+                    )}
+                </div>
+            )}
         </div>
     )
 }

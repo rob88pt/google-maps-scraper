@@ -1,16 +1,12 @@
 # Changelog
 
-## [2026-01-29] - Search and Filter Templates (Presets)
+## [2026-01-29] - Infinite Scroll & Presets
 
 ### Added
-- Search Template System:
-    - New `search_templates` table in Supabase with RLS policies and multi-user support.
-    - `POST`, `GET`, `DELETE` API routes for managing templates.
-    - `usePresets` hook for state management.
-    - `SearchPresetManager` component:
-        - Save/Load templates capturing filters, sorting, column layout, category, and search query.
-        - Deletion confirmation dialog for safety.
-        - Helpful empty state with onboarding hint.
+- **Infinite Scroll**: Replaced button-based pagination on the Leads tab with a seamless infinite scroll experience using `useInfiniteQuery` and `IntersectionObserver`.
+- **Search & Filter Templates (Presets)**: Full CRUD for UI state templates (filters, columns, search, sorting) with visual feedback and drift detection.
+    - Deletion confirmation dialog for safety.
+    - Helpful empty state with onboarding hint.
 - Visual Feedback:
     - Active indicators (blue theme + badges) for Category and Preset filters.
     - Robust drift detection using `useRef` comparison to prevent visual state race conditions.

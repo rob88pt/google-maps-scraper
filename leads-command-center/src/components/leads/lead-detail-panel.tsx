@@ -271,7 +271,7 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
     return (
         <div className="w-full h-full flex flex-col bg-slate-900 border-l border-slate-800">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-800">
+            <div className="flex items-center justify-between py-3 px-4 border-b border-slate-800">
                 <h3 className="font-semibold text-white truncate">Lead Details</h3>
                 {showCloseButton && (
                     <div className="flex items-center gap-2">
@@ -284,9 +284,39 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
 
             {/* Content */}
             <ScrollArea className="flex-1">
-                <div className="p-4 space-y-6">
+                <div className="p-3 space-y-3">
+                    {/* Quick Actions */}
+                    <div className="space-y-2 bg-slate-800/20 p-3 rounded-lg border border-slate-800/50">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Quick Actions</h4>
+                            <Badge variant="outline" className="text-[10px] border-slate-700 text-slate-500 uppercase">Tools</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-700 bg-slate-900/50 hover:bg-slate-800"
+                                onClick={() => copy(JSON.stringify(lead, null, 2), 'JSON')}
+                            >
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copy JSON
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-700 bg-slate-900/50 hover:bg-slate-800"
+                                onClick={exportAsJson}
+                            >
+                                <Download className="h-4 w-4 mr-2" />
+                                Export
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* No separator between distinct blocks */}
+
                     {/* CRM Section: Status & Notes */}
-                    <div className="space-y-4 bg-slate-800/30 p-4 rounded-xl border border-slate-800">
+                    <div className="space-y-3 bg-slate-800/30 p-3 rounded-lg border border-slate-800">
                         <div className="space-y-2">
                             <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Lead Status</label>
                             <Select
@@ -359,10 +389,9 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                         </div>
                     </div>
 
-                    <Separator className="bg-slate-800" />
 
                     {/* Hero Section */}
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {/* Thumbnail or Gallery */}
                         {lead.images && lead.images.length > 0 ? (
                             <ImageGallery images={lead.images} />
@@ -418,10 +447,10 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                         )}
                     </div>
 
-                    <Separator className="bg-slate-800" />
+                    <Separator className="bg-slate-800/50" />
 
                     {/* Contact Section */}
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Contact</h4>
 
                         {lead.phone && (
@@ -501,10 +530,10 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                         )}
                     </div>
 
-                    <Separator className="bg-slate-800" />
+                    <Separator className="bg-slate-800/50" />
 
                     {/* Location Section */}
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Location</h4>
 
                         <div className="flex items-start justify-between group">
@@ -562,8 +591,8 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                     {/* Open Hours */}
                     {hasOpenHours && (
                         <>
-                            <Separator className="bg-slate-800" />
-                            <div className="space-y-3">
+                            <Separator className="bg-slate-800/50" />
+                            <div className="space-y-2">
                                 <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                     <Clock className="h-4 w-4" />
                                     Hours
@@ -582,31 +611,50 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                         </>
                     )}
 
-                    {/* Description */}
                     {lead.description && (
                         <>
-                            <Separator className="bg-slate-800" />
-                            <div className="space-y-2">
+                            <Separator className="bg-slate-800/50" />
+                            <div className="space-y-1">
                                 <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider">About</h4>
                                 <p className="text-slate-300 text-sm">{lead.description}</p>
                             </div>
                         </>
                     )}
 
-                    {/* Reviews Section */}
+                    <Separator className="bg-slate-800/50" />
+
+                    {/* Metadata */}
+                    <div className="space-y-1">
+                        <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Traceability</h4>
+                        <div className="text-xs text-slate-500 space-y-1 font-mono">
+                            <div className="flex justify-between">
+                                <span>CID</span>
+                                <span>{lead.cid}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Place ID</span>
+                                <span>{lead.place_id}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Scraped</span>
+                                <span>{new Date(lead.created_at).toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Reviews Section at bottom */}
                     {((lead.user_reviews && lead.user_reviews.length > 0) ||
                         (lead.user_reviews_extended && lead.user_reviews_extended.length > 0)) && (
                             <>
-                                <Separator className="bg-slate-800" />
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                     <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                         <Star className="h-4 w-4" />
                                         Reviews ({(lead.user_reviews?.length || 0) + (lead.user_reviews_extended?.length || 0)})
                                     </h4>
-                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                         {/* Extended reviews first (from extra reviews extraction) */}
                                         {lead.user_reviews_extended?.map((review, i) => (
-                                            <div key={`ext-${i}`} className="bg-slate-800/50 rounded-lg p-3 space-y-2">
+                                            <div key={`ext-${i}`} className="bg-slate-800/50 rounded-lg p-3 space-y-2 border border-slate-800">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         {review.ProfilePicture && (
@@ -620,18 +668,18 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <RatingStars rating={review.Rating} />
-                                                        <span className="text-xs text-slate-500">{review.When}</span>
+                                                        <span className="text-[10px] text-slate-500">{review.When}</span>
                                                     </div>
                                                 </div>
                                                 {review.Description && (
-                                                    <p className="text-sm text-slate-300 leading-relaxed">{review.Description}</p>
+                                                    <p className="text-sm text-slate-300 leading-relaxed italic">"{review.Description}"</p>
                                                 )}
                                                 {review.Images && review.Images.length > 0 && (
                                                     <div className="flex gap-1 flex-wrap">
                                                         {review.Images.slice(0, 3).map((img, idx) => (
                                                             <Dialog key={idx}>
                                                                 <DialogTrigger asChild>
-                                                                    <div className="w-16 h-16 rounded cursor-zoom-in overflow-hidden">
+                                                                    <div className="w-16 h-16 rounded cursor-zoom-in overflow-hidden border border-slate-700">
                                                                         <LazyImage
                                                                             src={img}
                                                                             alt=""
@@ -657,7 +705,7 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                                         ))}
                                         {/* Regular reviews */}
                                         {lead.user_reviews?.map((review, i) => (
-                                            <div key={`reg-${i}`} className="bg-slate-800/50 rounded-lg p-3 space-y-2">
+                                            <div key={`reg-${i}`} className="bg-slate-800/50 rounded-lg p-3 space-y-2 border border-slate-800">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         {review.ProfilePicture && (
@@ -671,11 +719,11 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <RatingStars rating={review.Rating} />
-                                                        <span className="text-xs text-slate-500">{review.When}</span>
+                                                        <span className="text-[10px] text-slate-500">{review.When}</span>
                                                     </div>
                                                 </div>
                                                 {review.Description && (
-                                                    <p className="text-sm text-slate-300 leading-relaxed">{review.Description}</p>
+                                                    <p className="text-sm text-slate-300 leading-relaxed italic">"{review.Description}"</p>
                                                 )}
                                             </div>
                                         ))}
@@ -683,40 +731,6 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                                 </div>
                             </>
                         )}
-
-                    <Separator className="bg-slate-800" />
-
-                    {/* Quick Actions */}
-                    <div className="space-y-3">
-                        <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Actions</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-700 bg-transparent"
-                                onClick={() => copy(JSON.stringify(lead, null, 2), 'JSON')}
-                            >
-                                <Copy className="h-4 w-4 mr-2" />
-                                Copy JSON
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-700 bg-transparent"
-                                onClick={exportAsJson}
-                            >
-                                <Download className="h-4 w-4 mr-2" />
-                                Export
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Metadata */}
-                    <div className="pt-4 text-xs text-slate-600">
-                        <div>CID: {lead.cid}</div>
-                        <div>Place ID: {lead.place_id}</div>
-                        <div>Scraped: {new Date(lead.created_at).toLocaleString()}</div>
-                    </div>
                 </div>
             </ScrollArea>
 

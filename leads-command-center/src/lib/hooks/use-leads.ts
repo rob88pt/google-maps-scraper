@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Lead, LeadNote, LeadTag, LeadStatus } from '@/lib/supabase/types'
 
 // Types
@@ -98,6 +98,22 @@ export function useLeads(options: LeadsQueryOptions = {}) {
     return useQuery({
         queryKey: leadsKeys.list(options),
         queryFn: () => fetchLeads(options),
+        staleTime: 30 * 1000, // 30 seconds
+    })
+}
+
+/**
+ * Hook to fetch infinite scroll leads
+ */
+export function useInfiniteLeads(options: Omit<LeadsQueryOptions, 'page'> = {}) {
+    return useInfiniteQuery({
+        queryKey: leadsKeys.list(options),
+        queryFn: ({ pageParam = 1 }) => fetchLeads({ ...options, page: pageParam as number }),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            const currentTotalLoaded = lastPage.page * lastPage.pageSize
+            return currentTotalLoaded < lastPage.total ? lastPage.page + 1 : undefined
+        },
         staleTime: 30 * 1000, // 30 seconds
     })
 }
