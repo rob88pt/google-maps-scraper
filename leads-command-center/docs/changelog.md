@@ -20,6 +20,7 @@
 - Added detailed server-side logging to `api/search-templates` to track operations and debug mysterious deletions.
 
 ### Fixed
+- Fixed research/gallery preview regression where images in modals failed to load due to `LazyImage` intersection observer logic.
 - Fixed a race condition where applying a preset would immediately clear the "active" indicator due to state update latency.
 
 

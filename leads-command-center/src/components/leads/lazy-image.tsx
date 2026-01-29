@@ -41,15 +41,16 @@ export function LazyImage({
     baseDelayMs = 800,
     maxDelayMs = 5000,
     rootMargin = '400px',
-    loading = 'lazy',
+    priority = false, // If true, bypass intersection observer and load eagerly
+    loading = priority ? 'eager' : 'lazy',
     decoding = 'async',
     referrerPolicy = 'no-referrer', // Recommended for Google usercontent URLs
     ...props
-}: LazyImageProps) {
+}: LazyImageProps & { priority?: boolean }) {
     const containerRef = React.useRef<HTMLDivElement>(null)
     const retryTimerRef = React.useRef<number | null>(null)
 
-    const [inView, setInView] = React.useState(false)
+    const [inView, setInView] = React.useState(priority)
     const [attempt, setAttempt] = React.useState(0)
     const [status, setStatus] = React.useState<'idle' | 'loading' | 'loaded' | 'failed'>('idle')
 
@@ -65,7 +66,7 @@ export function LazyImage({
 
     // Intersection Observer to gate loading/retries
     React.useEffect(() => {
-        if (!containerRef.current) return
+        if (!containerRef.current || priority) return
 
         const observer = new IntersectionObserver(
             ([entry]) => {
@@ -76,7 +77,7 @@ export function LazyImage({
 
         observer.observe(containerRef.current)
         return () => observer.disconnect()
-    }, [rootMargin])
+    }, [rootMargin, priority])
 
     // Cleanup timer on unmount
     React.useEffect(() => {

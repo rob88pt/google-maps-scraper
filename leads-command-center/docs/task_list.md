@@ -15,6 +15,7 @@
 - [ ] Lead notes and status updates persistence (Added: 2026-01-28)
 
 ## ✅ Done
+- [x] Fixed Gallery Preview Regression (Done: 2026-01-29)
 - [x] Search and Filter Templates (Presets) (Done: 2026-01-29)
 - [x] Robust Image Loading & Retries (Done: 2026-01-28)
 - [x] Fixed Lead Table Interactivity & Hydration (Done: 2026-01-28)

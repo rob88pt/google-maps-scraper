@@ -147,6 +147,7 @@ function ImageGallery({ images }: { images: Lead['images'] }) {
                             alt={images[currentIndex]?.title || 'Business image'}
                             className="max-w-full max-h-[90vh] rounded-md"
                             imgClassName="object-contain"
+                            priority={true}
                         />
 
                         {images.length > 1 && (
@@ -385,6 +386,7 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                                         alt={lead.title}
                                         className="max-w-full max-h-[90vh] rounded-md"
                                         imgClassName="object-contain"
+                                        priority={true}
                                     />
                                 </DialogContent>
                             </Dialog>
@@ -644,6 +646,7 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                                                                         alt=""
                                                                         className="max-w-full max-h-[90vh] rounded-md"
                                                                         imgClassName="object-contain"
+                                                                        priority={true}
                                                                     />
                                                                 </DialogContent>
                                                             </Dialog>
