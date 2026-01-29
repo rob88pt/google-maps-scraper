@@ -12,7 +12,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone, GripVertical, Check, Facebook, Instagram, Twitter } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone, GripVertical, Check, Facebook, Instagram, Twitter, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { cn } from "@/lib/utils"
@@ -149,6 +149,22 @@ function getSocialPlatform(url: string) {
     return null;
 }
 
+// CRM Status colors and styles
+function getStatusStyles(status: string = 'new', isChecked: boolean = false) {
+    switch (status) {
+        case 'contacted':
+            return isChecked ? 'bg-blue-600 border-blue-500' : 'bg-blue-500/20 border-blue-500'
+        case 'qualified':
+            return isChecked ? 'bg-emerald-600 border-emerald-500' : 'bg-emerald-500/20 border-emerald-500'
+        case 'closed':
+            return isChecked ? 'bg-rose-600 border-rose-500' : 'bg-rose-500/20 border-rose-500'
+        case 'archived':
+            return isChecked ? 'bg-amber-600 border-amber-500' : 'bg-amber-500/20 border-amber-500'
+        default: // 'new'
+            return isChecked ? 'bg-primary border-primary' : 'bg-slate-700/20 border-slate-500'
+    }
+}
+
 // Cell Copy Button component
 function CellCopyButton({ text, label }: { text: string; label: string }) {
     const [copied, setCopied] = React.useState(false)
@@ -203,24 +219,35 @@ export const columns: ColumnDef<LeadRow>[] = [
                 />
             </div>
         ),
-        cell: ({ row }) => (
-            <div
-                className="flex items-center justify-center h-full w-full cursor-pointer"
-                style={{ minHeight: '48px' }}
-                onClick={(e) => {
-                    e.stopPropagation()
-                    row.toggleSelected(!row.getIsSelected())
-                }}
-            >
-                <Checkbox
-                    checked={row.getIsSelected()}
-                    onCheckedChange={(value) => row.toggleSelected(!!value)}
-                    aria-label="Select row"
-                    className="border-slate-600"
-                    onClick={(e) => e.stopPropagation()}
-                />
-            </div>
-        ),
+        cell: ({ row }) => {
+            const isSelected = row.getIsSelected()
+            const status = row.original.crm_status || 'new'
+            const statusStyles = getStatusStyles(status, isSelected)
+
+            return (
+                <div
+                    className="flex items-center justify-center h-full w-full cursor-pointer"
+                    style={{ minHeight: '48px' }}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        row.toggleSelected(!isSelected)
+                    }}
+                >
+                    <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={(value) => row.toggleSelected(!!value)}
+                        aria-label="Select row"
+                        className={cn(
+                            "transition-colors",
+                            statusStyles,
+                            // Override default shadcn checked classes to use our status colors
+                            isSelected && statusStyles
+                        )}
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+            )
+        },
         enableSorting: false,
         enableHiding: false,
         size: 44,
@@ -250,12 +277,20 @@ export const columns: ColumnDef<LeadRow>[] = [
     {
         accessorKey: 'title',
         header: 'Name',
-        cell: ({ row }) => (
-            <div className="font-medium text-white whitespace-normal break-words flex items-center group">
-                <span className="flex-1">{row.getValue('title')}</span>
-                <CellCopyButton text={row.getValue('title')} label="Name" />
-            </div>
-        ),
+        cell: ({ row }) => {
+            const notesCount = row.original.notes_count || 0
+            return (
+                <div className="font-medium text-white whitespace-normal break-words flex items-center gap-1.5 group">
+                    <span className="flex-1">{row.getValue('title')}</span>
+                    {notesCount > 0 && (
+                        <div title={`${notesCount} note${notesCount > 1 ? 's' : ''}`} className="shrink-0 text-blue-400">
+                            <MessageSquare className="h-3 w-3 fill-blue-400/20" />
+                        </div>
+                    )}
+                    <CellCopyButton text={row.getValue('title')} label="Name" />
+                </div>
+            )
+        },
         size: 250,
     },
     {

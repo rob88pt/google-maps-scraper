@@ -161,6 +161,8 @@ export function useLeadNotes(cid: string) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [...leadsKeys.detail(cid), 'notes'] })
+            // Invalidate the list to show updated notes_count in the table
+            queryClient.invalidateQueries({ queryKey: leadsKeys.lists() })
         },
     })
 

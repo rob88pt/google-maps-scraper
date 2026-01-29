@@ -50,10 +50,11 @@ interface LeadDetailPanelProps {
 }
 
 const STATUS_OPTIONS = [
-    { value: 'new', label: 'New', color: 'bg-blue-500' },
-    { value: 'contacted', label: 'Contacted', color: 'bg-yellow-500' },
-    { value: 'qualified', label: 'Qualified', color: 'bg-green-500' },
-    { value: 'closed', label: 'Closed', color: 'bg-slate-500' },
+    { value: 'new', label: 'New', color: 'bg-slate-500' },
+    { value: 'contacted', label: 'Contacted', color: 'bg-blue-500' },
+    { value: 'qualified', label: 'Qualified', color: 'bg-emerald-500' },
+    { value: 'closed', label: 'Closed', color: 'bg-rose-500' },
+    { value: 'archived', label: 'Archived', color: 'bg-amber-500' },
 ]
 
 // Copy to clipboard helper

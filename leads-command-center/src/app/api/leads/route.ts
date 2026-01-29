@@ -44,19 +44,34 @@ export async function GET(request: NextRequest) {
         const minReviewCount = searchParams.get('minReviewCount') ? parseInt(searchParams.get('minReviewCount')!) : null
         const maxReviewCount = searchParams.get('maxReviewCount') ? parseInt(searchParams.get('maxReviewCount')!) : null
         const category = searchParams.get('category')?.trim() || ''
+        const includeArchived = searchParams.get('includeArchived') === 'true'
         const sortBy = searchParams.get('sortBy') || 'created_at'
         const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc'
 
         // Calculate offset
         const offset = (page - 1) * pageSize
 
-        // Build the query - results table has JSONB 'data' column
+        // Build the query - join with lead_status and lead_notes
         let query = supabase
             .from('results')
-            .select('id, data, created_at, user_id', { count: 'exact' })
+            .select(`
+                id, 
+                data, 
+                created_at, 
+                user_id,
+                cid,
+                lead_status(status),
+                lead_notes(count)
+            `, { count: 'exact' })
 
-        // Apply JSONB filters using Supabase's json operators
-        // Note: These work on the 'data' JSONB column
+        // Apply archived filter
+        if (!includeArchived) {
+            // Postgrest doesn't support complex joins in filters easily via the client
+            // We can use the 'not.exists' or similar if we were using a different structure,
+            // but here we can filter by the joined table.
+            // Note: This requires lead_status to be joined.
+            query = query.or('status.neq.archived,status.is.null', { foreignTable: 'lead_status' })
+        }
 
         // For search, we use the optimized search_index column
         // We normalize the search term to match the index (lowercase + unaccented)
@@ -173,12 +188,31 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        // Transform results - extract lead data from JSONB
-        const leads = (results as ResultRow[] || []).map(row => ({
-            ...row.data,
-            id: row.id,
-            created_at: row.created_at
-        }))
+        // Transform results - extract lead data and enrich with CRM status/metadata
+        const leads = (results as any[] || []).map(row => {
+            const leadData = row.data as Lead
+
+            // Flatten joined data
+            const statusObj = row.lead_status as { status: string } | { status: string }[] | null
+            const notesObj = row.lead_notes as { count: number } | { count: number }[] | null
+
+            // Supabase returns array even for single if joined, or object depending on version/config
+            const crm_status = Array.isArray(statusObj)
+                ? (statusObj[0]?.status || 'new')
+                : (statusObj?.status || 'new')
+
+            const notes_count = Array.isArray(notesObj)
+                ? (notesObj[0]?.count || 0)
+                : (notesObj?.count || 0)
+
+            return {
+                ...leadData,
+                id: row.id,
+                created_at: row.created_at,
+                crm_status,
+                notes_count
+            }
+        })
 
         const response: LeadsResponse = {
             leads,

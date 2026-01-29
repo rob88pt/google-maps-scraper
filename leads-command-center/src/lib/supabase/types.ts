@@ -47,6 +47,9 @@ export interface Lead {
     user_reviews: Review[]
     user_reviews_extended: Review[]
     emails: string[]
+    // CRM Fields (added via API joins)
+    crm_status?: 'new' | 'contacted' | 'qualified' | 'closed' | 'archived'
+    notes_count?: number
 }
 
 export interface Image {
@@ -145,7 +148,7 @@ export interface LeadTag {
 
 export interface LeadStatus {
     lead_cid: string
-    status: 'new' | 'contacted' | 'qualified' | 'closed'
+    status: 'new' | 'contacted' | 'qualified' | 'closed' | 'archived'
     follow_up_date: string | null
     updated_at: string
 }
