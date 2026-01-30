@@ -1,23 +1,22 @@
 # Active Context
 
 ## Current Focus
-- Phase 4: Detail Panel Condensation & UI Polishing
+- Completed: Reviews Copy & Display Refinements
 
 ## Recent Changes
-- ✅ **Archive System**: Replaced bulk delete with a robust "soft-archive" system.
-- ✅ **Multi-User CRM**: Fixed FK constraints and RLS on `lead_status` to allow shared lead management.
-- ✅ **Advanced Filtering**: Implemented a 3-way Status Filter (Active, Archived, All).
-- ✅ **Detail Panel Polishing**: Condensed the layout, moved actions to header.
-- ✅ **Notes Editor Modal**: Implemented truncation, full CRUD in a centered modal, and delete confirmation.
+- ✅ **Review Copy JSON**: Added one-click copy buttons for reviews in the table and side panel.
+- ✅ **Smart Review Sorting**: All reviews are now sorted with text-rich reviews at the top and rating-only reviews at the bottom.
+- ✅ **Deduplication**: Unified logic across UI and exports to prefer `user_reviews_extended` and avoid duplicates.
+- ✅ **Rating Distribution Chart**: New visual chart in the side panel showing review distribution (1-5 stars).
+- ✅ **System Info Relocation**: Moved the "System Info" section (CID, Place ID, Scraped) to the bottom of the detail panel.
 
 ## Next Steps
 - [ ] Row Virtualization for LeadsTable (Priority: Performance for large lists).
 - [ ] Search accent-insensitivity refinement.
+- [ ] System Testing: Verify end-to-end stability.
 
 ## Blockers / Open Questions
-- None. (System is stable and verified).
+- None.
 
 ## Session Notes
-- Use `ts-node` or `tsx` with `--env-file` for verification scripts.
-- Remember to await `params` in all Next.js 15+ dynamic routes.
-- Composite PKs on `(user_id, lead_cid)` are essential for multi-user CRM data.
+- This session focused on enhancing the reviews experience and cleaning up the lead detail panel layout.

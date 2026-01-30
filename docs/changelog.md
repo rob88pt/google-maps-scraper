@@ -1,5 +1,43 @@
 # Changelog
 
+## [2026-01-30] - CRM Phase 4 & 5: UI Polishing & Notes Evolution
+
+### Added
+- **Notes Editor Modal**: Centered modal with large plain-text editor for full note management.
+- **Note CRUD**: Complete backend and frontend support for updating and deleting lead notes.
+- **Delete Confirmation**: Secure alert dialog for preventing accidental note deletion.
+- **Google Maps Shortcut**: Quick-action button in the Name column for direct access to locations.
+
+### Changed
+- **Lead Detail Panel**: Significantly condensed layout with reduced padding and uppercase labels.
+- **Header Actions**: Moved Copy/Export JSON and Archive/Restore to the panel header.
+- **Note Truncation**: Applied `line-clamp-2` to notes in the side panel for improved vertical density.
+- **Data Standardization**: Standardized note IDs to UUID strings across API, hooks, and UI components.
+
+### Files Affected
+- `leads-command-center/src/components/leads/note-editor-modal.tsx`
+- `leads-command-center/src/components/leads/lead-detail-panel.tsx`
+- `leads-command-center/src/components/leads/leads-table.tsx`
+- `leads-command-center/src/lib/hooks/use-leads.ts`
+- `leads-command-center/src/app/api/leads/[cid]/notes/route.ts`
+
+## [2026-01-29] - CRM Phase 1-3: Archive System & Persistence Fixes
+
+### Added
+- **Archive System**: Created `/api/leads/archive` and `/api/leads/unarchive` to replace deletion.
+- **Status Filter**: Implemented "Active/Archived/All" 3-state filter in the Leads toolbar.
+- **Database View**: Created `leads_with_status` view to enable efficient filtering via PostgREST.
+
+### Fixed
+- **Multi-User RLS**: Relaxed restrictive FK constraints and updated RLS policies on `lead_status` and `lead_notes` to allow collaborative management.
+- **Status Sync**: Resolved 405 errors during status restoration from the row actions menu.
+
+### Files Affected
+- `leads-command-center/src/app/api/leads/archive/route.ts`
+- `leads-command-center/src/lib/hooks/use-leads.ts`
+- `leads-command-center/src/app/leads/page.tsx`
+- `supabase/migrations/` (RLS and schema updates)
+
 ## [2026-01-28] - Bulk Delete & Table Interactivity Refinements
 
 ### Added

@@ -40,7 +40,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useMediaQuery } from '@/lib/hooks/use-media-query'
-import type { Lead } from '@/lib/supabase/types'
+import type { Lead, Review } from '@/lib/supabase/types'
 import { LazyImage } from './lazy-image'
 
 // Extended Lead type with row metadata
@@ -120,15 +120,45 @@ export function DataIndicators({ lead }: { lead: Lead }) {
     )
 }
 
+// Helper to normalize lead for JSON export (deduplicates & sorts reviews)
+function normalizeLeadForExport(lead: Lead): Lead {
+    const reviews = (lead.user_reviews_extended?.length
+        ? lead.user_reviews_extended
+        : lead.user_reviews || [])
+        .sort((a, b) => {
+            const aHasText = !!(a.Description && a.Description.trim())
+            const bHasText = !!(b.Description && b.Description.trim())
+            if (aHasText && !bHasText) return -1
+            if (!aHasText && bHasText) return 1
+            return 0
+        })
+
+    return {
+        ...lead,
+        user_reviews: reviews,
+        user_reviews_extended: undefined, // Clear to avoid duplicates/confusion
+    }
+}
+
 // Rating stars display
-function RatingDisplay({ rating, count }: { rating: number; count: number }) {
+function RatingDisplay({ rating, count, reviews }: { rating: number; count: number; reviews?: Review[] }) {
     return (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 group/rating">
             <div className="flex items-center gap-0.5">
                 <Star className={`h-3.5 w-3.5 ${rating >= 1 ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'}`} />
                 <span className="text-sm font-medium text-white">{rating.toFixed(1)}</span>
             </div>
-            <span className="text-xs text-slate-500">({count})</span>
+            <div className="flex items-center gap-1">
+                <span className="text-xs text-slate-500">({count})</span>
+                {reviews && reviews.length > 0 && (
+                    <div className="opacity-0 group-hover/rating:opacity-100 transition-opacity">
+                        <CellCopyButton
+                            text={JSON.stringify(reviews, null, 2)}
+                            label="Reviews JSON"
+                        />
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
@@ -314,12 +344,26 @@ export const columns: ColumnDef<LeadRow>[] = [
     {
         accessorKey: 'review_rating',
         header: 'Rating',
-        cell: ({ row }) => (
-            <RatingDisplay
-                rating={row.getValue('review_rating') as number}
-                count={row.original.review_count}
-            />
-        ),
+        cell: ({ row }) => {
+            const reviews = (row.original.user_reviews_extended?.length
+                ? row.original.user_reviews_extended
+                : row.original.user_reviews || [])
+                .sort((a, b) => {
+                    const aHasText = !!(a.Description && a.Description.trim())
+                    const bHasText = !!(b.Description && b.Description.trim())
+                    if (aHasText && !bHasText) return -1
+                    if (!aHasText && bHasText) return 1
+                    return 0
+                })
+
+            return (
+                <RatingDisplay
+                    rating={row.getValue('review_rating') as number}
+                    count={row.original.review_count}
+                    reviews={reviews.length > 0 ? reviews : undefined}
+                />
+            )
+        },
         size: 120,
     },
     {
@@ -525,7 +569,10 @@ export const columns: ColumnDef<LeadRow>[] = [
                             </DropdownMenuItem>
                         )}
                         <DropdownMenuItem
-                            onClick={() => copyToClipboard(JSON.stringify(lead, null, 2), 'Lead data')}
+                            onClick={() => {
+                                const normalized = normalizeLeadForExport(lead)
+                                copyToClipboard(JSON.stringify(normalized, null, 2), 'Lead data')
+                            }}
                             className="cursor-pointer"
                         >
                             <Copy className="mr-2 h-4 w-4" />

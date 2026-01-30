@@ -44,8 +44,8 @@ export interface Lead {
     owner: Owner
     complete_address: Address
     about: About[]
-    user_reviews: Review[]
-    user_reviews_extended: Review[]
+    user_reviews?: Review[]
+    user_reviews_extended?: Review[]
     emails: string[]
     // CRM Fields (added via API joins)
     crm_status?: 'new' | 'contacted' | 'qualified' | 'closed' | 'archived'

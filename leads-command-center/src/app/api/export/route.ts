@@ -45,10 +45,9 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Filter by CIDs (have to do this in JS since CID is in JSONB)
         const leads = (results as ResultRow[] || [])
             .filter(row => leadCids.includes(row.data.cid))
-            .map(row => row.data)
+            .map(row => normalizeLeadForExport(row.data))
 
         if (leads.length === 0) {
             return NextResponse.json(
@@ -103,6 +102,28 @@ export async function POST(request: NextRequest) {
             { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown' },
             { status: 500 }
         )
+    }
+}
+
+/**
+ * Helper to normalize lead for JSON export (deduplicates reviews)
+ */
+function normalizeLeadForExport(lead: Lead): Lead {
+    const reviews = (lead.user_reviews_extended?.length
+        ? lead.user_reviews_extended
+        : lead.user_reviews || [])
+        .sort((a, b) => {
+            const aHasText = !!(a.Description && a.Description.trim())
+            const bHasText = !!(b.Description && b.Description.trim())
+            if (aHasText && !bHasText) return -1
+            if (!aHasText && bHasText) return 1
+            return 0
+        })
+
+    return {
+        ...lead,
+        user_reviews: reviews,
+        user_reviews_extended: undefined, // Clear to avoid duplicates/confusion
     }
 }
 

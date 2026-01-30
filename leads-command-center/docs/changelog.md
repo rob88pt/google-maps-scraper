@@ -1,5 +1,23 @@
 # Changelog
 
+## [2026-01-30] - Reviews Copy & Display Refinements
+
+### Added
+- **Copy Reviews JSON**: One-click copy button in the table (on rating hover) and side panel header.
+- **Rating Distribution Chart**: Visual bar chart showing 1-5 star review counts in the Lead Detail Panel.
+- **Smart Review Sorting**: Reviews are sorted with text-rich content at the top and rating-only at the bottom.
+
+### Changed
+- **Deduplication Parity**: Unified review normalization logic across UI, copy buttons, and export API.
+- **System Info Section**: Relocated to the bottom of the Lead Detail Panel for improved layout.
+
+### Files Modified
+- `src/components/leads/leads-table.tsx` (Sorting, deduplication, copy button)
+- `src/components/leads/lead-detail-panel.tsx` (Chart, sorting, layout relocation)
+- `src/app/api/export/route.ts` (Export API sorting parity)
+
+---
+
 ## [2026-01-30] - CRM Phase 4 & 5: UI Polishing & Notes Evolution
 
 ### Added

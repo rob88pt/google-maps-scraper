@@ -1,22 +1,28 @@
 # Task List
 
-- [x] Implement Bulk Delete functionality (API, Hook, UI) (2026-01-28)
-- [x] Refine Leads Table row selection & event propagation (2026-01-28)
-- [x] Add padding to Leads Table selection column (2026-01-28)
+## 🔴 Blocked
+- None
 
-- [x] Resolve React Hydration Mismatch and Table Interactivity (2026-01-28)
-
-## 📋 Backlog (To Do)
-- [ ] System Testing: Verify end-to-end stability for sync and decoupled scraper from DB. (added: 2026-01-23)
+## 🟡 In Progress
+- [ ] Row Virtualization for LeadsTable (Priority: Maintain performance for large lists)
+- [ ] Search accent-insensitivity (Ongoing refinement)
+- [ ] Investigate mystery preset deletion (Logging active)
+- [ ] System Testing: Verify end-to-end stability for sync and decoupled scraper from DB (Added: 2026-01-23)
 
 ## ✅ Done
-- [x] Restore Map Functionality & Image Markers (2026-01-27)
-- [x] Save table layout in between sessions (done: 2026-01-28)
-- [x] Refine Search Functionality (done: 2026-01-28)
-- [x] Implement CRM Feature (Status + Notes) in UI and API (2026-01-27)
-- [x] Integrate Nominatim Coordinate Picker (2026-01-27)
-- [x] Fix Data Traceability (input_id mapping) (2026-01-27)
-- [x] Re-implement Reverted Features & Enhancements (2026-01-27)
-- [x] Fix: Docker race conditions & network resolution (Supavisor). (2026-01-23)
-- [x] Feature: Auth, Real-time status, and Leads Table UI. (2026-01-23)
-- [x] Project Initialization: Next.js 16.1, Supabase, Docker integration. (2026-01-23)
+- [x] CRM Phase 4 & 5: UI Polishing & Notes Evolution (Done: 2026-01-30)
+- [x] CRM Phase 3: Archive System (Done: 2026-01-29)
+- [x] Multi-User CRM Fixes & FK Relaxation (Done: 2026-01-29)
+- [x] Infinite Scroll Implementation (Done: 2026-01-29)
+- [x] Bulk Delete functionality & Confirmation UI (Done: 2026-01-28)
+- [x] Fixed Table Interactivity & Hydration (Done: 2026-01-28)
+- [x] Refined leads table row selection & event propagation (Done: 2026-01-28)
+- [x] Added padding to Leads Table selection column (Done: 2026-01-28)
+- [x] Robust Image Loading & Exponential Backoff (Done: 2026-01-28)
+- [x] SSR-Safe Table Layout Persistence (Done: 2026-01-28)
+- [x] Refined Filter UI Overhaul & "No Reviews" Filter (Done: 2026-01-28)
+- [x] Category Filter & Server-Side Sorting (Done: 2026-01-27)
+- [x] Map Restoration & Nominatim Coordinate Picker (Done: 2026-01-27)
+- [x] Multi-format Export System (Done: 2026-01-23)
+- [x] Supabase Auth & RLS Hardening (Done: 2026-01-23)
+- [x] Project Initialization (Next.js 16.1 + Supabase) (Done: 2026-01-23)

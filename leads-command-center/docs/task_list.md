@@ -4,12 +4,7 @@
 - None
 
 ## 🟡 In Progress
-- [/] CRM Feature Improvements (Added: 2026-01-29)
-  - [x] **Phase 1**: Backend – Status + Notes metadata in API (Done: 2026-01-29)
-  - [x] **Phase 2**: Table – Status-colored checkboxes + Notes badge (Done: 2026-01-29)
-  - [x] **Phase 3**: Archive System – Replace delete with archive (Done: 2026-01-29)
-  - [x] **Phase 4**: Detail Panel – Condensed layout & header actions (Done: 2026-01-30)
-- [x] **Phase 5**: Notes Modal – Truncation + Modal CRUD (Done: 2026-01-30)
+- None (Session complete)
 
 ## 📋 Backlog (To Do)
 - [ ] Row Virtualization for LeadsTable (Priority: Maintain performance for large lists)
@@ -18,9 +13,9 @@
 - [ ] Investigate mystery preset deletion (Logging active)
 
 ## ✅ Done
-- [x] Documentation Consolidation & History Restoration (Done: 2026-01-29)
-- [x] Infinite Scroll Implementation (Done: 2026-01-29)
-- [x] Lead Detail Panel Condensation (Done: 2026-01-29)
+- [x] Reviews Copy & Display Refinements (Done: 2026-01-30)
+  - Copy JSON button, smart sorting, distribution chart, system info relocation
+- [x] CRM Feature Improvements – All Phases (Done: 2026-01-30)
 - [x] Search & Filter Templates (Presets) (Done: 2026-01-29)
 - [x] Bulk Delete Leads & Confirmation UI (Done: 2026-01-28)
 - [x] Robust Image Loading & Exponential Backoff (Done: 2026-01-28)

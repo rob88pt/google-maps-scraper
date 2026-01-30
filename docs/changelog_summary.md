@@ -3,6 +3,8 @@
 For the full history and technical granularities, see the [Full Changelog](changelog.md).
 
 ## Major Milestones
+  - **2026-01-30** [Notes Editor Modal & Detail Panel Polishing](changelog.md#2026-01-30---crm-phase-4--5-ui-polishing--notes-evolution) (Truncation, full CRUD in modal, condensed layout)
+  - **2026-01-29** [Archive System & persistence Fixes](changelog.md#2026-01-29---crm-phase-1-3-archive-system--persistence-fixes) (Soft-archive, Status filter, RLS fixes)
   - **2026-01-28** [Bulk Delete & Table Interactivity](changelog.md#2026-01-28---bulk-delete--table-interactivity-refinements) (Multi-ID selection, delete UI, row click propagation fixes)
   - **2026-01-28** [Review Count Filter & UI Overhaul](changelog.md#2026-01-28---filter-ui-overhaul--no-reviews-filter) (Min/Max ranges, No Reviews toggle, Social Icons, 2-column refinements)
   - **2026-01-28** [Table Copy Buttons & Layout Polish](changelog.md#2026-01-28---table-copy-buttons) (Hover copy buttons, Location refinement, Spacing)

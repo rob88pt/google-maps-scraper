@@ -42,7 +42,7 @@ import {
     SelectValue
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import type { Lead } from '@/lib/supabase/types'
+import type { Lead, LeadNote } from '@/lib/supabase/types'
 import { useLeadNotes, useLeadStatus, useArchiveLeads, useUnarchiveLeads } from '@/lib/hooks/use-leads'
 import { LazyImage } from './lazy-image'
 import { NoteEditorModal } from './note-editor-modal'
@@ -99,13 +99,66 @@ function RatingStars({ rating }: { rating: number }) {
  * Transforms a Google Maps image URL to its highest resolution version.
  */
 function getHighResUrl(url?: string) {
-    if (!url) return '';
+    if (!url) return ''
     if (url.includes('googleusercontent.com')) {
-        // Strip existing parameters and add =s0 for original resolution
-        const baseUrl = url.split('=')[0];
-        return `${baseUrl}=s0`;
+        return url.split('=')[0] + '=s1600'
     }
-    return url;
+    return url
+}
+
+function RatingDistribution({ reviews }: { reviews: Lead['user_reviews'] }) {
+    if (!reviews || reviews.length === 0) return null
+
+    const distribution = reviews.reduce((acc, r) => {
+        const rating = Math.floor(r.Rating)
+        if (rating >= 1 && rating <= 5) acc[rating] = (acc[rating] || 0) + 1
+        return acc
+    }, {} as Record<number, number>)
+
+    const maxCount = Math.max(...Object.values(distribution), 1)
+
+    return (
+        <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800 space-y-2 mb-4">
+            {[5, 4, 3, 2, 1].map(star => {
+                const count = distribution[star] || 0
+                const percent = (count / maxCount) * 100
+                return (
+                    <div key={star} className="flex items-center gap-2 text-[10px]">
+                        <div className="flex items-center gap-1 w-8 shrink-0">
+                            <span className="text-slate-400">{star}</span>
+                            <Star className="h-2 w-2 text-yellow-500 fill-yellow-500" />
+                        </div>
+                        <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-yellow-500" style={{ width: `${percent}%` }} />
+                        </div>
+                        <span className="w-4 text-slate-500 text-right">{count}</span>
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
+
+/**
+ * Helper to normalize lead for JSON export (deduplicates & sorts reviews)
+ */
+function normalizeLeadForExport(lead: Lead): Lead {
+    const reviews = (lead.user_reviews_extended?.length
+        ? lead.user_reviews_extended
+        : lead.user_reviews || [])
+        .sort((a, b) => {
+            const aHasText = !!(a.Description && a.Description.trim())
+            const bHasText = !!(b.Description && b.Description.trim())
+            if (aHasText && !bHasText) return -1
+            if (!aHasText && bHasText) return 1
+            return 0
+        })
+
+    return {
+        ...lead,
+        user_reviews: reviews,
+        user_reviews_extended: undefined, // Clear to avoid duplicates/confusion
+    }
 }
 
 // Image gallery component
@@ -293,7 +346,8 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
     }
 
     const exportAsJson = () => {
-        const blob = new Blob([JSON.stringify(lead, null, 2)], { type: 'application/json' })
+        const normalized = normalizeLeadForExport(lead)
+        const blob = new Blob([JSON.stringify(normalized, null, 2)], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -318,7 +372,10 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                         size="icon"
                         title="Copy JSON"
                         className="h-8 w-8 text-slate-400 hover:text-white"
-                        onClick={() => copy(JSON.stringify(lead, null, 2), 'JSON')}
+                        onClick={() => {
+                            const normalized = normalizeLeadForExport(lead)
+                            copy(JSON.stringify(normalized, null, 2), 'JSON')
+                        }}
                     >
                         <Copy className="h-4 w-4" />
                     </Button>
@@ -733,8 +790,108 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                         </>
                     )}
 
-                    {/* Metadata Section (Compact) */}
-                    <div className="space-y-2 p-3 bg-slate-800/10 rounded-lg border border-slate-800/30">
+
+                    {/* Reviews Section at bottom */}
+                    {((lead.user_reviews && lead.user_reviews.length > 0) ||
+                        (lead.user_reviews_extended && lead.user_reviews_extended.length > 0)) && (
+                            <>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                            <Star className="h-4 w-4" />
+                                            Reviews
+                                            {lead.review_rating !== undefined && lead.review_rating > 0 && (
+                                                <span className="ml-1 text-white normal-case">
+                                                    {lead.review_rating.toFixed(1)} ({lead.review_count})
+                                                </span>
+                                            )}
+                                        </h4>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-slate-500 hover:text-white"
+                                            title="Copy Reviews as JSON"
+                                            onClick={() => {
+                                                const normalized = normalizeLeadForExport(lead)
+                                                copy(JSON.stringify(normalized.user_reviews, null, 2), 'Reviews JSON')
+                                            }}
+                                        >
+                                            <Copy className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                        {(() => {
+                                            const normalized = normalizeLeadForExport(lead)
+                                            const reviews = normalized.user_reviews || []
+
+                                            if (reviews.length === 0) {
+                                                return <p className="text-xs text-slate-500 italic">No reviews available.</p>
+                                            }
+
+                                            return (
+                                                <>
+                                                    <RatingDistribution reviews={reviews} />
+                                                    {reviews.map((review, i) => (
+                                                        <div key={i} className="bg-slate-800/50 rounded-lg p-3 space-y-2 border border-slate-800">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2">
+                                                                    {review.ProfilePicture && (
+                                                                        <LazyImage
+                                                                            src={review.ProfilePicture}
+                                                                            alt=""
+                                                                            className="w-6 h-6 rounded-full"
+                                                                        />
+                                                                    )}
+                                                                    <span className="text-sm font-medium text-white">{review.Name}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <RatingStars rating={review.Rating} />
+                                                                    <span className="text-[10px] text-slate-500">{review.When}</span>
+                                                                </div>
+                                                            </div>
+                                                            {review.Description && (
+                                                                <p className="text-sm text-slate-300 leading-relaxed italic">"{review.Description}"</p>
+                                                            )}
+                                                            {review.Images && review.Images.length > 0 && (
+                                                                <div className="flex gap-1 flex-wrap">
+                                                                    {review.Images.slice(0, 3).map((img, idx) => (
+                                                                        <Dialog key={idx}>
+                                                                            <DialogTrigger asChild>
+                                                                                <div className="w-16 h-16 rounded cursor-zoom-in overflow-hidden border border-slate-700">
+                                                                                    <LazyImage
+                                                                                        src={img}
+                                                                                        alt=""
+                                                                                        className="w-full h-full"
+                                                                                    />
+                                                                                </div>
+                                                                            </DialogTrigger>
+                                                                            <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
+                                                                                <DialogTitle className="sr-only">Review Image Preview</DialogTitle>
+                                                                                <LazyImage
+                                                                                    src={getHighResUrl(img)}
+                                                                                    alt=""
+                                                                                    className="max-w-full max-h-[90vh] rounded-md"
+                                                                                    imgClassName="object-contain"
+                                                                                    priority={true}
+                                                                                />
+                                                                            </DialogContent>
+                                                                        </Dialog>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </>
+                                            )
+                                        })()}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                    {/* Metadata Section (Now at bottom) */}
+                    <Separator className="bg-slate-800/50" />
+                    <div className="space-y-2 p-3 bg-slate-800/5 rounded-lg border border-slate-800/30">
                         <div className="flex items-center justify-between">
                             <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">System Info</h4>
                             {lead.description && (
@@ -751,11 +908,11 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                         <div className="grid grid-cols-1 gap-1 text-[9px] text-slate-500 font-mono">
                             <div className="flex justify-between border-b border-slate-800/50 pb-1">
                                 <span className="text-slate-600">CID</span>
-                                <span className="text-slate-400">{lead.cid}</span>
+                                <span className="text-slate-400 uppercase">{lead.cid}</span>
                             </div>
                             <div className="flex justify-between border-b border-slate-800/50 pb-1">
                                 <span className="text-slate-600">Place ID</span>
-                                <span className="text-slate-400">{lead.place_id}</span>
+                                <span className="text-slate-400 uppercase">{lead.place_id}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-slate-600">Scraped</span>
@@ -763,96 +920,6 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                             </div>
                         </div>
                     </div>
-
-                    {/* Reviews Section at bottom */}
-                    {((lead.user_reviews && lead.user_reviews.length > 0) ||
-                        (lead.user_reviews_extended && lead.user_reviews_extended.length > 0)) && (
-                            <>
-                                <div className="space-y-2">
-                                    <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                        <Star className="h-4 w-4" />
-                                        Reviews ({(lead.user_reviews?.length || 0) + (lead.user_reviews_extended?.length || 0)})
-                                    </h4>
-                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                        {/* Extended reviews first (from extra reviews extraction) */}
-                                        {lead.user_reviews_extended?.map((review, i) => (
-                                            <div key={`ext-${i}`} className="bg-slate-800/50 rounded-lg p-3 space-y-2 border border-slate-800">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        {review.ProfilePicture && (
-                                                            <LazyImage
-                                                                src={review.ProfilePicture}
-                                                                alt=""
-                                                                className="w-6 h-6 rounded-full"
-                                                            />
-                                                        )}
-                                                        <span className="text-sm font-medium text-white">{review.Name}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <RatingStars rating={review.Rating} />
-                                                        <span className="text-[10px] text-slate-500">{review.When}</span>
-                                                    </div>
-                                                </div>
-                                                {review.Description && (
-                                                    <p className="text-sm text-slate-300 leading-relaxed italic">"{review.Description}"</p>
-                                                )}
-                                                {review.Images && review.Images.length > 0 && (
-                                                    <div className="flex gap-1 flex-wrap">
-                                                        {review.Images.slice(0, 3).map((img, idx) => (
-                                                            <Dialog key={idx}>
-                                                                <DialogTrigger asChild>
-                                                                    <div className="w-16 h-16 rounded cursor-zoom-in overflow-hidden border border-slate-700">
-                                                                        <LazyImage
-                                                                            src={img}
-                                                                            alt=""
-                                                                            className="w-full h-full"
-                                                                        />
-                                                                    </div>
-                                                                </DialogTrigger>
-                                                                <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
-                                                                    <DialogTitle className="sr-only">Review Image Preview</DialogTitle>
-                                                                    <LazyImage
-                                                                        src={getHighResUrl(img)}
-                                                                        alt=""
-                                                                        className="max-w-full max-h-[90vh] rounded-md"
-                                                                        imgClassName="object-contain"
-                                                                        priority={true}
-                                                                    />
-                                                                </DialogContent>
-                                                            </Dialog>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                        {/* Regular reviews */}
-                                        {lead.user_reviews?.map((review, i) => (
-                                            <div key={`reg-${i}`} className="bg-slate-800/50 rounded-lg p-3 space-y-2 border border-slate-800">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        {review.ProfilePicture && (
-                                                            <LazyImage
-                                                                src={review.ProfilePicture}
-                                                                alt=""
-                                                                className="w-6 h-6 rounded-full"
-                                                            />
-                                                        )}
-                                                        <span className="text-sm font-medium text-white">{review.Name}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <RatingStars rating={review.Rating} />
-                                                        <span className="text-[10px] text-slate-500">{review.When}</span>
-                                                    </div>
-                                                </div>
-                                                {review.Description && (
-                                                    <p className="text-sm text-slate-300 leading-relaxed italic">"{review.Description}"</p>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </>
-                        )}
                 </div>
             </ScrollArea>
 
