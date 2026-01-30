@@ -18,7 +18,10 @@ import {
     StickyNote,
     Loader2,
     Archive,
-    RotateCcw
+    RotateCcw,
+    Plus,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react'
 import {
     Dialog,
@@ -42,6 +45,7 @@ import { toast } from 'sonner'
 import type { Lead } from '@/lib/supabase/types'
 import { useLeadNotes, useLeadStatus, useArchiveLeads, useUnarchiveLeads } from '@/lib/hooks/use-leads'
 import { LazyImage } from './lazy-image'
+import { NoteEditorModal } from './note-editor-modal'
 
 export type LeadRow = Lead & { id: number; created_at: string }
 
@@ -221,6 +225,7 @@ function ImageGallery({ images }: { images: Lead['images'] }) {
 export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadDetailPanelProps) {
     const { copy, copied } = useCopyToClipboard()
     const [noteContent, setNoteContent] = React.useState('')
+    const [isAddingNote, setIsAddingNote] = React.useState(false)
 
     // CRM hooks
     const {
@@ -229,14 +234,19 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
         updateStatus
     } = useLeadStatus(lead?.cid || '')
 
+    const { mutate: archiveLead, isPending: isArchiving } = useArchiveLeads()
+    const { mutate: unarchiveLead, isPending: isUnarchiving } = useUnarchiveLeads()
+
+    const [selectedNote, setSelectedNote] = React.useState<LeadNote | null>(null)
+    const [isNoteEditorOpen, setIsNoteEditorOpen] = React.useState(false)
+
     const {
         data: notes = [],
         isLoading: notesLoading,
-        addNote
+        addNote,
+        updateNote,
+        deleteNote
     } = useLeadNotes(lead?.cid || '')
-
-    const { mutate: archiveLead, isPending: isArchiving } = useArchiveLeads()
-    const { mutate: unarchiveLead, isPending: isUnarchiving } = useUnarchiveLeads()
 
     if (!lead) return null
 
@@ -264,6 +274,24 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
         }
     }
 
+    const handleUpdateNote = async (id: string, content: string) => {
+        try {
+            await updateNote.mutateAsync({ id, content })
+            toast.success('Note updated')
+        } catch (err) {
+            toast.error('Failed to update note')
+        }
+    }
+
+    const handleDeleteNote = async (id: string) => {
+        try {
+            await deleteNote.mutateAsync(id)
+            toast.success('Note deleted')
+        } catch (err) {
+            toast.error('Failed to delete note')
+        }
+    }
+
     const exportAsJson = () => {
         const blob = new Blob([JSON.stringify(lead, null, 2)], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
@@ -285,6 +313,25 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                     )}
                 </div>
                 <div className="flex items-center gap-1">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Copy JSON"
+                        className="h-8 w-8 text-slate-400 hover:text-white"
+                        onClick={() => copy(JSON.stringify(lead, null, 2), 'JSON')}
+                    >
+                        <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Export JSON"
+                        className="h-8 w-8 text-slate-400 hover:text-white"
+                        onClick={exportAsJson}
+                    >
+                        <Download className="h-4 w-4" />
+                    </Button>
+                    <Separator orientation="vertical" className="h-4 bg-slate-800 mx-1" />
                     {currentStatus === 'archived' ? (
                         <Button
                             variant="ghost"
@@ -319,7 +366,7 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                         </Button>
                     )}
                     {showCloseButton && (
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white" onClick={onClose}>
                             <X className="h-4 w-4" />
                         </Button>
                     )}
@@ -328,112 +375,7 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
 
             {/* Content */}
             <ScrollArea className="flex-1">
-                <div className="p-3 space-y-3">
-                    {/* Quick Actions */}
-                    <div className="space-y-2 bg-slate-800/20 p-3 rounded-lg border border-slate-800/50">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Quick Actions</h4>
-                            <Badge variant="outline" className="text-[10px] border-slate-700 text-slate-500 uppercase">Tools</Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-700 bg-slate-900/50 hover:bg-slate-800"
-                                onClick={() => copy(JSON.stringify(lead, null, 2), 'JSON')}
-                            >
-                                <Copy className="h-4 w-4 mr-2" />
-                                Copy JSON
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-700 bg-slate-900/50 hover:bg-slate-800"
-                                onClick={exportAsJson}
-                            >
-                                <Download className="h-4 w-4 mr-2" />
-                                Export
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* No separator between distinct blocks */}
-
-                    {/* CRM Section: Status & Notes */}
-                    <div className="space-y-3 bg-slate-800/30 p-3 rounded-lg border border-slate-800">
-                        <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Lead Status</label>
-                            <Select
-                                value={currentStatus}
-                                onValueChange={handleUpdateStatus}
-                                disabled={updateStatus.isPending}
-                            >
-                                <SelectTrigger className="w-full bg-slate-900 border-slate-700">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-900 border-slate-700">
-                                    {STATUS_OPTIONS.map((opt) => (
-                                        <SelectItem key={opt.value} value={opt.value}>
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${opt.color}`} />
-                                                {opt.label}
-                                            </div>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <Separator className="bg-slate-800" />
-
-                        <div className="space-y-3">
-                            <label className="text-xs font-medium text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                <StickyNote className="h-3 w-3" />
-                                Notes
-                            </label>
-
-                            <div className="space-y-2">
-                                <Textarea
-                                    placeholder="Add a note about this lead..."
-                                    className="bg-slate-900 border-slate-700 min-h-[80px] text-sm"
-                                    value={noteContent}
-                                    onChange={(e) => setNoteContent(e.target.value)}
-                                />
-                                <div className="flex justify-end">
-                                    <Button
-                                        size="sm"
-                                        className="h-8 bg-blue-600 hover:bg-blue-700"
-                                        disabled={!noteContent.trim() || addNote.isPending}
-                                        onClick={handleAddNote}
-                                    >
-                                        {addNote.isPending && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
-                                        Save Note
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {notesLoading ? (
-                                <div className="flex justify-center py-4">
-                                    <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
-                                </div>
-                            ) : notes.length > 0 ? (
-                                <div className="space-y-3 pt-2">
-                                    {notes.map((note) => (
-                                        <div key={note.id} className="text-sm bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
-                                            <p className="text-slate-300 leading-relaxed">{note.content}</p>
-                                            <div className="mt-2 text-[10px] text-slate-500">
-                                                {new Date(note.created_at).toLocaleString()}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-xs text-slate-500 text-center py-2">No notes yet.</p>
-                            )}
-                        </div>
-                    </div>
-
-
+                <div className="p-3 space-y-4">
                     {/* Hero Section */}
                     <div className="space-y-3">
                         {/* Thumbnail or Gallery */}
@@ -466,29 +408,165 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                         ) : null}
 
                         {/* Title and Category */}
-                        <div>
-                            <h2 className="text-xl font-bold text-white">{lead.title}</h2>
-                            <Badge variant="secondary" className="mt-1 bg-slate-800 text-slate-300">
+                        <div className="space-y-1">
+                            <div className="flex items-start justify-between gap-4">
+                                <h2 className="text-xl font-bold text-white leading-tight">{lead.title}</h2>
+                                {lead.status && (
+                                    <Badge
+                                        variant={lead.status.toLowerCase().includes('open') ? 'default' : 'secondary'}
+                                        className={`${lead.status.toLowerCase().includes('open') ? 'bg-green-600' : 'bg-slate-700'} shrink-0 text-[10px] h-5`}
+                                    >
+                                        {lead.status}
+                                    </Badge>
+                                )}
+                            </div>
+                            <Badge variant="secondary" className="bg-slate-800 text-slate-300 hover:bg-slate-800">
                                 {lead.category}
                             </Badge>
                         </div>
 
                         {/* Rating */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                             <RatingStars rating={lead.review_rating} />
-                            <span className="text-white font-medium">{lead.review_rating.toFixed(1)}</span>
-                            <span className="text-slate-500">({lead.review_count} reviews)</span>
+                            <span className="text-sm text-white font-medium">{lead.review_rating.toFixed(1)}</span>
+                            <span className="text-xs text-slate-500">({lead.review_count} reviews)</span>
+                        </div>
+                    </div>
+
+                    {/* CRM Section: Status & Notes */}
+                    <div className="space-y-3 bg-slate-800/20 p-3 rounded-lg border border-slate-800/50">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Lead Management</h4>
+                            <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${STATUS_OPTIONS.find(o => o.value === currentStatus)?.color || 'bg-slate-500'}`} />
+                                <span className="text-[10px] font-medium text-slate-400 uppercase">{currentStatus}</span>
+                            </div>
                         </div>
 
-                        {/* Status (Business Status like "Open") */}
-                        {lead.status && (
-                            <Badge
-                                variant={lead.status.toLowerCase().includes('open') ? 'default' : 'secondary'}
-                                className={lead.status.toLowerCase().includes('open') ? 'bg-green-600' : 'bg-slate-700'}
-                            >
-                                {lead.status}
-                            </Badge>
-                        )}
+                        <div className="grid grid-cols-1 gap-3">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-medium text-slate-500 uppercase">Change Status</label>
+                                <Select
+                                    value={currentStatus}
+                                    onValueChange={handleUpdateStatus}
+                                    disabled={updateStatus.isPending}
+                                >
+                                    <SelectTrigger className="h-8 bg-slate-900 border-slate-700 text-xs text-slate-300">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-900 border-slate-700">
+                                        {STATUS_OPTIONS.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${opt.color}`} />
+                                                    {opt.label}
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-[10px] font-medium text-slate-500 uppercase flex items-center gap-1.5">
+                                        <StickyNote className="h-3 w-3" />
+                                        Notes ({notes.length})
+                                    </label>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 px-2 text-[10px] text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+                                        onClick={() => setIsAddingNote(!isAddingNote)}
+                                    >
+                                        {isAddingNote ? (
+                                            <><ChevronUp className="h-3 w-3 mr-1" /> Close</>
+                                        ) : (
+                                            <><Plus className="h-3 w-3 mr-1" /> Add Note</>
+                                        )}
+                                    </Button>
+                                </div>
+
+                                {isAddingNote && (
+                                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <Textarea
+                                            placeholder="Write a note..."
+                                            className="bg-slate-900 border-slate-700 min-h-[60px] text-xs text-slate-300"
+                                            value={noteContent}
+                                            onChange={(e) => setNoteContent(e.target.value)}
+                                            autoFocus
+                                        />
+                                        <div className="flex justify-end gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                className="h-7 text-[10px] text-slate-500"
+                                                onClick={() => {
+                                                    setIsAddingNote(false)
+                                                    setNoteContent('')
+                                                }}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                className="h-7 bg-blue-600 hover:bg-blue-700 text-[10px] px-3"
+                                                disabled={!noteContent.trim() || addNote.isPending}
+                                                onClick={async () => {
+                                                    await handleAddNote()
+                                                    setIsAddingNote(false)
+                                                }}
+                                            >
+                                                {addNote.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                                                Save Note
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {notesLoading ? (
+                                    <div className="flex justify-center py-2">
+                                        <Loader2 className="h-3 w-3 animate-spin text-slate-600" />
+                                    </div>
+                                ) : notes.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {notes.map((note) => (
+                                            <div
+                                                key={note.id}
+                                                className="text-xs bg-slate-900/40 p-2.5 rounded border border-slate-800/50 hover:bg-slate-800/60 transition-colors cursor-pointer group/note"
+                                                onClick={() => {
+                                                    setSelectedNote(note)
+                                                    setIsNoteEditorOpen(true)
+                                                }}
+                                            >
+                                                <p className="text-slate-300 leading-relaxed line-clamp-2">
+                                                    {note.content}
+                                                </p>
+                                                <div className="mt-1.5 text-[9px] text-slate-500 font-mono flex items-center justify-between">
+                                                    <span>{new Date(note.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                                    <span className="opacity-0 group-hover/note:opacity-100 text-blue-400">Edit</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : !isAddingNote && (
+                                    <p className="text-[10px] text-slate-600 text-center py-1">No notes recorded.</p>
+                                )}
+
+                                <NoteEditorModal
+                                    note={selectedNote}
+                                    isOpen={isNoteEditorOpen}
+                                    onClose={() => {
+                                        setIsNoteEditorOpen(false)
+                                        setSelectedNote(null)
+                                    }}
+                                    onSave={handleUpdateNote}
+                                    onDelete={handleDeleteNote}
+                                    isSaving={updateNote.isPending}
+                                    isDeleting={deleteNote.isPending}
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <Separator className="bg-slate-800/50" />
@@ -655,33 +733,33 @@ export function LeadDetailPanel({ lead, onClose, showCloseButton = true }: LeadD
                         </>
                     )}
 
-                    {lead.description && (
-                        <>
-                            <Separator className="bg-slate-800/50" />
-                            <div className="space-y-1">
-                                <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider">About</h4>
-                                <p className="text-slate-300 text-sm">{lead.description}</p>
-                            </div>
-                        </>
-                    )}
+                    {/* Metadata Section (Compact) */}
+                    <div className="space-y-2 p-3 bg-slate-800/10 rounded-lg border border-slate-800/30">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">System Info</h4>
+                            {lead.description && (
+                                <Badge variant="outline" className="text-[8px] h-4 border-slate-700 text-slate-500">About Available</Badge>
+                            )}
+                        </div>
 
-                    <Separator className="bg-slate-800/50" />
+                        {lead.description && (
+                            <p className="text-[11px] text-slate-400 leading-relaxed italic border-l-2 border-slate-700 pl-2">
+                                {lead.description}
+                            </p>
+                        )}
 
-                    {/* Metadata */}
-                    <div className="space-y-1">
-                        <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Traceability</h4>
-                        <div className="text-xs text-slate-500 space-y-1 font-mono">
-                            <div className="flex justify-between">
-                                <span>CID</span>
-                                <span>{lead.cid}</span>
+                        <div className="grid grid-cols-1 gap-1 text-[9px] text-slate-500 font-mono">
+                            <div className="flex justify-between border-b border-slate-800/50 pb-1">
+                                <span className="text-slate-600">CID</span>
+                                <span className="text-slate-400">{lead.cid}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-800/50 pb-1">
+                                <span className="text-slate-600">Place ID</span>
+                                <span className="text-slate-400">{lead.place_id}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span>Place ID</span>
-                                <span>{lead.place_id}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Scraped</span>
-                                <span>{new Date(lead.created_at).toLocaleString()}</span>
+                                <span className="text-slate-600">Scraped</span>
+                                <span className="text-slate-400">{new Date(lead.created_at).toLocaleString()}</span>
                             </div>
                         </div>
                     </div>

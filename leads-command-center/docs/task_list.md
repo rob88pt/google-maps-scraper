@@ -8,10 +8,11 @@
   - [x] **Phase 1**: Backend – Status + Notes metadata in API (Done: 2026-01-29)
   - [x] **Phase 2**: Table – Status-colored checkboxes + Notes badge (Done: 2026-01-29)
   - [x] **Phase 3**: Archive System – Replace delete with archive (Done: 2026-01-29)
-  - [ ] **Phase 4**: Detail Panel – Condense CRM (Expandable notes input)
+  - [x] **Phase 4**: Detail Panel – Condensed layout & header actions (Done: 2026-01-30)
+- [x] **Phase 5**: Notes Modal – Truncation + Modal CRUD (Done: 2026-01-30)
 
 ## 📋 Backlog (To Do)
-- [ ] Row Virtualization for LeadsTable (Maintain performance for large lists)
+- [ ] Row Virtualization for LeadsTable (Priority: Maintain performance for large lists)
 - [ ] Search accent-insensitivity (Ongoing refinement)
 - [ ] System Testing: Verify end-to-end stability for decoupled scraper (Added: 2026-01-23)
 - [ ] Investigate mystery preset deletion (Logging active)

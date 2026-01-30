@@ -1,6 +1,18 @@
 # Changelog
 
-## [2026-01-29] - Archive System & Multi-User CRM Fixes
+## [2026-01-30] - CRM Phase 4 & 5: UI Polishing & Notes Evolution
+
+### Added
+- **Notes Editor Modal**: Centered modal with large plain-text editor for full note management.
+- **Note CRUD**: Complete backend and frontend support for updating and deleting lead notes.
+- **Delete Confirmation**: Secure alert dialog for preventing accidental note deletion.
+- **Google Maps Shortcut**: Quick-action button in the Name column for direct access to locations.
+
+### Changed
+- **Lead Detail Panel**: Significantly condensed layout with reduced padding and uppercase labels.
+- **Header Actions**: Moved Copy/Export JSON and Archive/Restore to the panel header.
+- **Note Truncation**: Applied `line-clamp-2` to notes in the side panel for improved vertical density.
+- **Data Standardization**: Standardized note IDs to UUID strings across API, hooks, and UI components.
 
 ### Added
 - **Soft-Archive System**: Replaced permanent deletion with a shared archiving mechanism.

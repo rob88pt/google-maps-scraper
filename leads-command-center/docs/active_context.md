@@ -6,12 +6,13 @@
 ## Recent Changes
 - ✅ **Archive System**: Replaced bulk delete with a robust "soft-archive" system.
 - ✅ **Multi-User CRM**: Fixed FK constraints and RLS on `lead_status` to allow shared lead management.
-- ✅ **Advanced Filtering**: Implemented a 3-way Status Filter (Active, Archived, All) using a database view to overcome PostgREST limitations.
-- ✅ **API Robustness**: Added `/api/leads/unarchive` and integrated toast feedback for all CRM actions.
+- ✅ **Advanced Filtering**: Implemented a 3-way Status Filter (Active, Archived, All).
+- ✅ **Detail Panel Polishing**: Condensed the layout, moved actions to header.
+- ✅ **Notes Editor Modal**: Implemented truncation, full CRUD in a centered modal, and delete confirmation.
 
 ## Next Steps
-- [ ] Phase 4: Consolidate lead details for higher information density
-- [ ] Implement expandable notes input in the detail panel
+- [ ] Row Virtualization for LeadsTable (Priority: Performance for large lists).
+- [ ] Search accent-insensitivity refinement.
 
 ## Blockers / Open Questions
 - None. (System is stable and verified).

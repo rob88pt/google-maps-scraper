@@ -12,7 +12,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone, GripVertical, Check, Facebook, Instagram, Twitter, MessageSquare, RotateCcw, Archive } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, Globe, Mail, Camera, UtensilsCrossed, ShoppingCart, Calendar, Star, MoreHorizontal, ExternalLink, Copy, Phone, GripVertical, Check, Facebook, Instagram, Twitter, MessageSquare, RotateCcw, Archive, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
 import { useArchiveLeads, useUnarchiveLeads } from '@/lib/hooks/use-leads'
 
@@ -280,6 +280,7 @@ export const columns: ColumnDef<LeadRow>[] = [
         header: 'Name',
         cell: ({ row }) => {
             const notesCount = row.original.notes_count || 0
+            const mapLink = row.original.link
             return (
                 <div className="font-medium text-white whitespace-normal break-words flex items-center gap-1.5 group">
                     <span className="flex-1">{row.getValue('title')}</span>
@@ -288,7 +289,23 @@ export const columns: ColumnDef<LeadRow>[] = [
                             <MessageSquare className="h-3 w-3 fill-blue-400/20" />
                         </div>
                     )}
-                    <CellCopyButton text={row.getValue('title')} label="Name" />
+                    <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity ml-1 shrink-0">
+                        {mapLink && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-slate-500 hover:text-blue-400 overflow-hidden"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    window.open(mapLink, '_blank')
+                                }}
+                                title="Open in Google Maps"
+                            >
+                                <ExternalLink className="h-3 w-3" />
+                            </Button>
+                        )}
+                        <CellCopyButton text={row.getValue('title')} label="Name" />
+                    </div>
                 </div>
             )
         },

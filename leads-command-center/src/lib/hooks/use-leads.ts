@@ -170,7 +170,36 @@ export function useLeadNotes(cid: string) {
         },
     })
 
-    return { ...query, addNote }
+    const updateNote = useMutation({
+        mutationFn: async ({ id, content }: { id: string; content: string }) => {
+            const response = await fetch(`/api/leads/${encodeURIComponent(cid)}/notes`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, content }),
+            })
+            if (!response.ok) throw new Error('Failed to update note')
+            return response.json()
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [...leadsKeys.detail(cid), 'notes'] })
+        },
+    })
+
+    const deleteNote = useMutation({
+        mutationFn: async (id: string) => {
+            const response = await fetch(`/api/leads/${encodeURIComponent(cid)}/notes?id=${id}`, {
+                method: 'DELETE',
+            })
+            if (!response.ok) throw new Error('Failed to delete note')
+            return response.json()
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [...leadsKeys.detail(cid), 'notes'] })
+            queryClient.invalidateQueries({ queryKey: leadsKeys.lists() })
+        },
+    })
+
+    return { ...query, addNote, updateNote, deleteNote }
 }
 
 /**
